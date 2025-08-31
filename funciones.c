@@ -1,11 +1,10 @@
 #include "funciones.h"
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "parser.h"
+#include "string_utils.h"
 #include "utils.h"
+
+#define LARGO_FUNCIONES 1000
+
+static Funcion* funcion_crear();
 
 /*
  * Ya recibe string verificada que es una seguidilla de alpha +
@@ -13,8 +12,8 @@
  * en modificar la original, se va a destruie luego de
  * todos modos, necesito pasarlo a lista/array
  */
-Funcion strfunc_to_array(char* cadena) {
-    Funcion funcion = funcion_crear();
+Funcion* strfunc_to_array(char* cadena) {
+    Funcion* funcion = funcion_crear();
     char* cursor = cadena;
     while (*cursor) {
         avanzar_hasta_noespacio(&cursor);
@@ -41,38 +40,28 @@ Funcion strfunc_to_array(char* cadena) {
     return funcion;
 }
 
-Funcion funcion_crear() {
-    Funcion funcion = malloc(sizeof(struct _Funcion));
-    char** definicion = malloc(100 * sizeof(char*));
-    assert(funcion != NULL);
-    assert(definicion != NULL);
+void componer_funcion(Funcion* funcion, char* nombre) {
+    garray_insertar(funcion, (void*)nombre);
+}
 
-    funcion->definicion = definicion;
-    funcion->capacidad = 100;
-    funcion->cantidad_actual = 0;
+void destruir_funcion(Funcion* funcion) {
+    garray_destruir(funcion);
+}
+
+Funcion* copiar_funcion(const Funcion* funcion) {
+    return garray_copiar(funcion);
+}
+
+void visitar_funcion(const Funcion* funcion) {
+    garray_imprimir(funcion);
+}
+
+static Funcion* funcion_crear() {
+    Funcion* funcion = garray_crear(LARGO_FUNCIONES,
+                                    (FuncionComparadora)cmp_str,
+                                    (FuncionDestructora)destruir_str,
+                                    (FuncionVisitante)visitar_str,
+                                    (FuncionCopia)copiar_str);
+
     return funcion;
-}
-
-static void componer_funcion(Funcion funcion, char* nombre) {
-    if (funcion->cantidad_actual + 1 == funcion->capacidad)
-        extender_largo_definicion(funcion);
-
-    size_t largo = strlen(nombre);
-    funcion->definicion[funcion->cantidad_actual] = malloc(largo * sizeof(char) + 1);
-    assert(funcion->definicion[funcion->cantidad_actual] != NULL);
-    strcpy(funcion->definicion[funcion->cantidad_actual], nombre);
-    funcion->cantidad_actual++;
-}
-
-static void extender_largo_definicion(Funcion funcion) {
-    char** temp = realloc(funcion->definicion, (funcion->capacidad * 2) * sizeof(char*));
-    assert(temp != NULL);
-    funcion->definicion = temp;
-}
-
-void funcion_mostrar(Funcion funcion) {
-    int cant = funcion->cantidad_actual;
-    for (int i = 0; i < cant; i++) {
-        printf("Componente %d: %s \n", i, funcion->definicion[i]);
-    }
 }

@@ -15,4 +15,8 @@ add_executable(TPFinalEDyA main.c
         utils.c
         utils.h
         listas.c
-        listas.h)
+        listas.h
+        garray.c
+        garray.h
+        string_utils.c
+        string_utils.h)

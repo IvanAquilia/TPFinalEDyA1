@@ -1,10 +1,10 @@
+#include "glist.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "glist.h"
 
 // ------------------ Crear / Destruir ------------------
-GList* lista_crear(FuncionComparadora cmp,
+GList* glist_crear(FuncionComparadora cmp,
                    FuncionDestructora destruir,
                    FuncionVisitante visitar,
                    FuncionCopia copiar) {
@@ -25,7 +25,7 @@ GList* lista_crear(FuncionComparadora cmp,
     return lista;
 }
 
-void lista_destruir(GList* lista) {
+void glist_destruir(GList* lista) {
     Nodo* actual = lista->head;
     while (actual != NULL) {
         Nodo* temp = actual;
@@ -38,7 +38,7 @@ void lista_destruir(GList* lista) {
 }
 
 // ------------------ Insertar ------------------
-void lista_insertar_inicio(GList* lista, void* dato) {
+void glist_insertar_inicio(GList* lista, void* dato) {
     Nodo* nuevo = malloc(sizeof(Nodo));
     assert(nuevo != NULL);
     nuevo->dato = lista->copiar(dato);
@@ -55,7 +55,7 @@ void lista_insertar_inicio(GList* lista, void* dato) {
     lista->longitud++;
 }
 
-void lista_insertar_final(GList* lista, void* dato) {
+void glist_insertar_final(GList* lista, void* dato) {
     Nodo* nuevo = malloc(sizeof(Nodo));
     assert(nuevo != NULL);
     nuevo->dato = lista->copiar(dato);
@@ -73,7 +73,7 @@ void lista_insertar_final(GList* lista, void* dato) {
 }
 
 // ------------------ Eliminar ------------------
-int lista_eliminar_inicio(GList* lista) {
+int glist_eliminar_inicio(GList* lista) {
     if (lista->head == NULL)
         return 0;
 
@@ -93,7 +93,7 @@ int lista_eliminar_inicio(GList* lista) {
     return 1;
 }
 
-int lista_eliminar_final(GList* lista) {
+int glist_eliminar_final(GList* lista) {
     if (lista->tail == NULL)
         return 0;
 
@@ -114,20 +114,20 @@ int lista_eliminar_final(GList* lista) {
 }
 
 // ------------------ Consultas ------------------
-void* lista_primero(GList* lista) {
+void* glist_primero(GList* lista) {
     if (lista->head == NULL)
         return NULL;
     return lista->head->dato;
 }
 
-void* lista_ultimo(GList* lista) {
+void* glist_ultimo(GList* lista) {
     if (lista->tail == NULL)
         return NULL;
     return lista->tail->dato;
 }
 
 // ------------------ Buscar ------------------
-void* lista_buscar(GList* lista, void* dato) {
+void* glist_buscar(GList* lista, void* dato) {
     Nodo* actual = lista->head;
     while (actual != NULL) {
         if (lista->cmp(actual->dato, dato) == 0) {
@@ -139,7 +139,7 @@ void* lista_buscar(GList* lista, void* dato) {
 }
 
 // ------------------ Utilidades ------------------
-void lista_imprimir(GList* lista) {
+void glist_imprimir(const GList* lista) {
     Nodo* actual = lista->head;
     while (actual != NULL) {
         lista->visitar(actual->dato);
@@ -147,15 +147,15 @@ void lista_imprimir(GList* lista) {
     }
 }
 
-GList* lista_copiar(GList* original) {
-    GList* copia = lista_crear(original->cmp,
+GList* glist_copiar(const GList* original) {
+    GList* copia = glist_crear(original->cmp,
                                original->destruir,
                                original->visitar,
                                original->copiar);
 
     Nodo* actual = original->head;
     while (actual != NULL) {
-        lista_insertar_final(copia, actual->dato);
+        glist_insertar_final(copia, actual->dato);
         actual = actual->sig;
     }
     return copia;

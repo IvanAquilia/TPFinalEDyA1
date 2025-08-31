@@ -6,16 +6,29 @@
  * Las listas definidas por el usuario son representadas mediante
  * listas doblemente enlazadas generales.
  */
-typedef GList* Lista;
+typedef GList Lista;
 
-Lista strlist_to_lista(char* cadena);
+/*
+ */
+Lista* strlist_to_lista(char* cadena);
 
-int cmp_int(const int* a, const int* b);
+/*
+ */
+void lista_insertar_entero(Lista* lista, int* entero);
 
-void destruir_int(int* dato);
+/*
+ * Necesitada al destruir una Declaracion
+ */
+void destruir_lista(Lista* lista);
 
-int* copiar_int(const int* dato);
+/*
+ * Necesitada al copiar una Declaracion
+ */
+Lista* copiar_lista(const Lista* lista);
 
-void visitar_int(const int* dato);
+/*
+ * Necesitada al visitar una Declaracion
+ */
+void visitar_lista(const Lista* lista);
 
 #endif

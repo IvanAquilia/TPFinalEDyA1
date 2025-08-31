@@ -1,35 +1,35 @@
 #ifndef FUNCIONES_H
 #define FUNCIONES_H
-#include "glist.h"
+#include "garray.h"
 
 /*
  * Cada funcion es un array dinamico de los nombres (char*) de las funciones que la compone en orden.
  * Ej. : f1: ["0d", "Mi", "<Dd>", "Si"]
  */
-struct _Funcion {
-    char** definicion;
-    int capacidad;
-    int cantidad_actual;
-};
 
-typedef struct _Funcion* Funcion;
+typedef GArray Funcion;
 
-Funcion strfunc_to_array(char* cadena);
+/*
+ */
+Funcion* strfunc_to_array(char* cadena);
 
-Funcion funcion_crear();
+/*
+ */
+void componer_funcion(Funcion* funcion, char* nombre);
 
-static void componer_funcion(Funcion funcion, char* nombre);
+/*
+ * Necesitada al destruir una Declaracion
+ */
+void destruir_funcion(Funcion* funcion);
 
-int cmp_str(const char* a, const char* b);
+/*
+ * Necesitada al copiar una Declaracion
+ */
+Funcion* copiar_funcion(const Funcion* funcion);
 
-void destruir_str(char* dato);
-
-char* copiar_str(const char* dato);
-
-void visitar_str(const char* dato);
-
-static void extender_largo_definicion(Funcion funcion);
-
-void funcion_mostrar(Funcion funcion);
+/*
+ * Necesitada al visitar una Declaracion
+ */
+void visitar_funcion(const Funcion* funcion);
 
 #endif

@@ -4,20 +4,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+static Lista* lista_crear();
+
 /*
  * Ya recibe lista verificada que es minimo [],
  * no importa modificar la original aca, necesito pasarla a lista total
  * despues se pisa el buffer e nuevo.
  */
-Lista strlist_to_lista(char* cadena) {
+Lista* strlist_to_lista(char* cadena) {
     if (!cadena)
         return NULL;
 
     size_t len = strlen(cadena);
-    Lista lista = lista_crear((FuncionComparadora)cmp_int,
-                              (FuncionDestructora)destruir_int,
-                              (FuncionVisitante)visitar_int,
-                              (FuncionCopia)copiar_int);
+    Lista* lista = lista_crear();
+
     int invalido = 0;
     if (len > 2) {
         // Considero solo lo que esta dentro de los [ ]
@@ -35,7 +35,7 @@ Lista strlist_to_lista(char* cadena) {
                 if (value == num)
                     // Verificar que no hubo overflow ya que las
                     // funciones (copy, cmp...) de la lista esperan int's
-                    lista_insertar_final(lista, &value);
+                    lista_insertar_entero(lista, &value);
                 else
                     invalido = 1;
             } else {
@@ -50,5 +50,31 @@ Lista strlist_to_lista(char* cadena) {
 
     return lista;
 }
+
+void lista_insertar_entero(Lista* lista, int* entero) {
+    glist_insertar_final(lista, (void*)entero);
+}
+
+void destruir_lista(Lista* lista) {
+    glist_destruir(lista);
+}
+
+Lista* copiar_lista(const Lista* lista) {
+    return glist_copiar(lista);
+}
+
+void visitar_lista(const Lista* lista) {
+    glist_imprimir(lista);
+}
+
+static Lista* lista_crear() {
+    Lista* lista = glist_crear((FuncionComparadora)cmp_int,
+                                (FuncionDestructora)destruir_int,
+                                (FuncionVisitante)visitar_int,
+                                (FuncionCopia)copiar_int);
+    return lista;
+}
+
+
 
 

@@ -2,17 +2,12 @@
 #define GLIST_H
 
 // ------------------ Funciones genéricas usadas en la interfaz ------------------
-
 typedef int (*FuncionComparadora)(const void* a, const void* b);
-
 typedef void (*FuncionDestructora)(void* dato);
-
 typedef void* (*FuncionCopia)(const void* dato);
-
 typedef void (*FuncionVisitante)(const void* dato);
 
 // ------------------ Definición de estructuras ------------------
-
 typedef struct _Nodo {
     void* dato;
     struct _Nodo* sig;
@@ -31,40 +26,62 @@ typedef struct {
 
 // ------------------ Interfaz pública ------------------
 
-// Crear lista vacía
-GList* lista_crear(FuncionComparadora cmp,
+/*
+ * Crear lista vacía
+ */
+GList* glist_crear(FuncionComparadora cmp,
                    FuncionDestructora destruir,
                    FuncionVisitante visitar,
                    FuncionCopia copiar);
 
-// Destruir lista (aplica la destructora a cada dato si está definida)
-void lista_destruir(GList* lista);
+/*
+ * Destruir lista (aplica la destructora a cada dato si está definida)
+ */
+void glist_destruir(GList* lista);
 
-// Insertar al inicio
-void lista_insertar_inicio(GList* lista, void* dato);
+/*
+ * Insertar al inicio
+ */
+void glist_insertar_inicio(GList* lista, void* dato);
 
-// Insertar al final
-void lista_insertar_final(GList* lista, void* dato);
+/*
+ * Insertar al final
+ */
+void glist_insertar_final(GList* lista, void* dato);
 
-// Eliminar del inicio (devuelve 0 si está vacía)
-int lista_eliminar_inicio(GList* lista);
+/*
+ * Eliminar del inicio (devuelve 0 si está vacía)
+ */
+int glist_eliminar_inicio(GList* lista);
 
-// Eliminar del final (devuelve 0 si está vacía)
-int lista_eliminar_final(GList* lista);
+/*
+ * Eliminar del final (devuelve 0 si está vacía)
+ */
+int glist_eliminar_final(GList* lista);
 
-// Obtener primer elemento (o NULL si está vacía)
-void* lista_primero(GList* lista);
+/*
+ * Obtener primer elemento (o NULL si está vacía)
+ */
+void* glist_primero(GList* lista);
 
-// Obtener último elemento (o NULL si está vacía)
-void* lista_ultimo(GList* lista);
+/*
+ * Obtener último elemento (o NULL si está vacía)
+ */
+void* glist_ultimo(GList* lista);
 
-// Buscar un elemento (usa la funcion comparadora)
-void* lista_buscar(GList* lista, void* dato);
+/*
+ * Buscar un elemento (usa la funcion comparadora)
+ */
+void* glist_buscar(GList* lista, void* dato);
 
-// Imprimir lista (usa la funcion impresora si está definida)
-void lista_imprimir(GList* lista);
+/*
+ * Imprimir lista (usa la funcion impresora si está definida)
+ */
+void glist_imprimir(const GList* lista);
 
-// Copiar lista (copia referencias, no clona datos)
-GList* lista_copiar(GList* original);
+/*
+ * Copiar lista (copia referencias, no clona datos)
+ */
+GList* glist_copiar(const GList* original);
 
 #endif

@@ -1,15 +1,17 @@
 #include "parser.h"
 #include "glist.h"
 #include "listas.h"
+#include "funciones.h"
+#include "hash.h"
+#include "utils.h"
 #include <stdio.h>
 
-#include "funciones.h"
-
-int main() {
+int main(void) {
     printf("\n------------INTERPRETE DE LISTAS EDyA1------------\n");
-    char buffer[256];
+    char buffer[10000];
     int en_funcionamiento = 1;
-
+    Declaracion* declaracion;
+    Declaraciones declaraciones = declaraciones_crear();
     while (en_funcionamiento) {
         printf(">>> ");
         fgets(buffer, sizeof(buffer), stdin);
@@ -17,15 +19,15 @@ int main() {
 
         switch (r.tipo) {
             case OP_DEFL:
-                lista_imprimir((Lista)r.expr);
-                printf("\n");
+                declaracion = declaracion_crear(LISTA, r.identificador, (Lista*)r.expresion);
+                hashear_y_manejar_output(declaraciones, declaracion);
                 break;
             case OP_DEFF:
-                funcion_mostrar((Funcion)r.expr);
-                printf("\n");
+                declaracion = declaracion_crear(FUNCION, r.identificador, (Funcion*)r.expresion);
+                hashear_y_manejar_output(declaraciones, declaracion);
                 break;
             case OP_APPLY:
-                printf("Aplicar funcion '%s'\n", r.nombre);
+                printf("Aplicar funcion '%s'\n", r.identificador);
                 break;
             case OP_SEARCH:
                 printf("Buscar transformaciones\n");
@@ -38,8 +40,11 @@ int main() {
                 break;
         }
 
+        tabla_hash_recorrer(declaraciones);
         parser_liberar(&r);
     }
 
+    tabla_hash_destruir(declaraciones);
     return 0;
 }
+

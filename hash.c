@@ -1,17 +1,19 @@
+#include "hash.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "hash.h"
 
 #define FACTOR_CARGA_MAX 0.7
 
-// ------------------ Crear tabla ------------------
-HashTable* hash_crear(int capacidad,
-                      FuncionHash hash,
-                      FuncionComparadora cmp,
-                      FuncionDestructora destruir,
-                      FuncionCopia copiar,
-                      FuncionVisitante visitar) {
+static void tabla_hash_redimensionar(HashTable* tabla, unsigned int nueva_capacidad);
+
+// ------------------ Crear / Destruir ------------------
+HashTable* tabla_hash_crear(int capacidad,
+                            FuncionHash hash,
+                            FuncionComparadora cmp,
+                            FuncionDestructora destruir,
+                            FuncionCopia copiar,
+                            FuncionVisitante visitar) {
     HashTable* tabla = malloc(sizeof(HashTable));
     assert(tabla != NULL);
     assert(hash != NULL);
@@ -34,8 +36,89 @@ HashTable* hash_crear(int capacidad,
     return tabla;
 }
 
-// ------------------ Redimensionar ------------------
-static void hash_redimensionar(HashTable* tabla, unsigned int nueva_capacidad) {
+void tabla_hash_destruir(HashTable* tabla) {
+    for (unsigned int i = 0; i < tabla->capacidad; i++) {
+        if (tabla->buckets[i] != NULL) {
+            tabla->destruir(tabla->buckets[i]->dato);
+            free(tabla->buckets[i]);
+        }
+    }
+    free(tabla->buckets);
+    free(tabla);
+}
+
+// ------------------ Insertar ------------------
+int tabla_hash_insertar(HashTable* tabla, const void* dato) {
+    if (dato == NULL)
+        return 0;
+
+    unsigned int capacidad = tabla->capacidad;
+    unsigned long h = tabla->hash(dato);
+    unsigned long indice = h % capacidad;
+
+    int insertado = 0, repetido = 0;
+
+    for (unsigned int i = 0; i < capacidad && !insertado && !repetido; i++) {
+        unsigned int pos = (indice + i) % capacidad;
+        if (tabla->buckets[pos] == NULL) {
+            Entrada* nueva = malloc(sizeof(Entrada));
+            assert(nueva != NULL);
+
+            nueva->dato = tabla->copiar(dato);
+            tabla->buckets[pos] = nueva;
+            tabla->elementos++;
+            insertado = 1;
+        } else if (tabla->cmp(tabla->buckets[pos]->dato, dato) == 0) {
+            repetido = 1;
+        }
+    }
+
+    if (insertado) {
+        double factor = (double)tabla->elementos / capacidad;
+        if (factor > FACTOR_CARGA_MAX) {
+            tabla_hash_redimensionar(tabla, capacidad * 2);
+        }
+    }
+
+    return insertado;
+}
+
+// ------------------ Buscar ------------------
+void* tabla_hash_buscar(HashTable* tabla, const void* dato) {
+    if (dato == NULL)
+        return NULL;
+
+    unsigned int capacidad = tabla->capacidad;
+    unsigned long h = tabla->hash(dato);
+    unsigned long indice = h % capacidad;
+    void* encontrado = NULL;
+
+    // Debido a que no se pueden eliminar elementos, si no se encuentra en el
+    // primer slot del linear probing, no lo estará en los siguientes.
+    if (tabla->buckets[indice] == NULL)
+        return NULL;
+
+    for (unsigned int i = 0; i < tabla->capacidad && !encontrado; i++) {
+        unsigned int pos = (indice + i) % capacidad;
+        if (tabla->cmp(tabla->buckets[pos]->dato, dato) == 0) {
+            encontrado = tabla->buckets[pos]->dato;
+        }
+    }
+
+    return encontrado;
+}
+
+// ------------------ Utilidades ------------------
+void tabla_hash_recorrer(HashTable* tabla) {
+    for (unsigned int i = 0; i < tabla->capacidad; i++) {
+        if (tabla->buckets[i] != NULL) {
+            tabla->visitar(tabla->buckets[i]->dato);
+        }
+    }
+}
+
+// ------------------ Utilidades internas ------------------
+static void tabla_hash_redimensionar(HashTable* tabla, unsigned int nueva_capacidad) {
     Entrada** nuevos_buckets = calloc(nueva_capacidad, sizeof(Entrada*));
     assert(nuevos_buckets != NULL);
 
@@ -63,81 +146,4 @@ static void hash_redimensionar(HashTable* tabla, unsigned int nueva_capacidad) {
     free(tabla->buckets);
     tabla->buckets = nuevos_buckets;
     tabla->capacidad = nueva_capacidad;
-}
-
-// ------------------ Insertar ------------------
-int hash_insertar(HashTable* tabla, const void* dato) {
-    unsigned int capacidad = tabla->capacidad;
-    unsigned long h = tabla->hash(dato);
-    unsigned long indice = h % capacidad;
-
-    int insertado = 0, repetido = 0;
-
-    for (unsigned int i = 0; i < tabla->capacidad && !insertado && !repetido; i++) {
-        unsigned int pos = (indice + i) % capacidad;
-        if (tabla->buckets[pos] == NULL) {
-            Entrada* nueva = malloc(sizeof(Entrada));
-            assert(nueva != NULL);
-
-            nueva->dato = tabla->copiar(dato);
-            tabla->buckets[pos] = nueva;
-            tabla->elementos++;
-            insertado = 1;
-        } else if (tabla->cmp(tabla->buckets[pos]->dato, dato) == 0) {
-            repetido = 1;
-        }
-    }
-
-    if (insertado) {
-        double factor = (double)tabla->elementos / capacidad;
-        if (factor > FACTOR_CARGA_MAX) {
-            hash_redimensionar(tabla, tabla->capacidad * 2);
-        }
-    }
-
-    return insertado;
-}
-
-// ------------------ Buscar ------------------
-void* hash_buscar(HashTable* tabla, const void* dato) {
-    unsigned int capacidad = tabla->capacidad;
-    unsigned long h = tabla->hash(dato);
-    unsigned long indice = h % capacidad;
-    void* encontrado = NULL;
-
-    // Debido a que no se pueden eliminar elementos, si no se encuentra en el
-    // primer slot del linear probing, no lo estará en los siguientes.
-    if (tabla->buckets[indice] == NULL)
-        return NULL;
-
-    for (unsigned int i = 0; i < tabla->capacidad && !encontrado; i++) {
-        unsigned int pos = (indice + i) % capacidad;
-        if (tabla->cmp(tabla->buckets[pos]->dato, dato) == 0) {
-            encontrado = tabla->buckets[pos]->dato;
-        }
-    }
-
-    return encontrado;
-}
-
-
-// ------------------ Recorrer ------------------
-void hash_recorrer(HashTable* tabla) {
-    for (unsigned int i = 0; i < tabla->capacidad; i++) {
-        if (tabla->buckets[i] != NULL) {
-            tabla->visitar(tabla->buckets[i]->dato);
-        }
-    }
-}
-
-// ------------------ Destruir ------------------
-void hash_destruir(HashTable* tabla) {
-    for (unsigned int i = 0; i < tabla->capacidad; i++) {
-        if (tabla->buckets[i] != NULL) {
-            tabla->destruir(tabla->buckets[i]->dato);
-            free(tabla->buckets[i]);
-        }
-    }
-    free(tabla->buckets);
-    free(tabla);
 }
