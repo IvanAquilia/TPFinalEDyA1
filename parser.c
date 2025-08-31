@@ -8,9 +8,10 @@
 #include <ctype.h>
 
 /*
- * Avanza puntero hasta el comienzo de la definicion y luego devuelve el identificador de dicha definicion, si es posible.
+ * Avanza puntero hasta el comienzo de lo que se encuentre luego del signo igual, omitiendo todos los espacios
+ * en el medio, luego devuelve dicha string encontrada previa al signo igual, si fue posible.
  */
-static char* parsear_nombre(char** buffer);
+static char* obtener_cadena_pre_igual(char** buffer);
 static int verificar_funcion(char* buffer);
 static int verificar_lista(char* corchete_inicio, char* corchete_final);
 static int identificador_invalido(char caracter);
@@ -36,7 +37,7 @@ ResultadoParser parser_analizar(const char* input) {
             r.tipo = OP_EXIT;
         }
         else if (strncmp(cursor, "defl ", 5) == 0) {
-            char* nombre = parsear_nombre(&cursor);
+            char* nombre = obtener_cadena_pre_igual(&cursor);
             if (nombre && *cursor && *cursor == '[') {
                 char* corchete_inicio = cursor;
                 char* corchete_final = strchr(cursor, ']');
@@ -54,7 +55,7 @@ ResultadoParser parser_analizar(const char* input) {
                 }
             }
         } else if (strncmp(cursor, "deff ", 5) == 0){
-            char* nombre = parsear_nombre(&cursor);
+            char* nombre = obtener_cadena_pre_igual(&cursor);
             if (nombre && *cursor) {
                 int invalido = verificar_funcion(cursor);
                 if (!invalido) {
@@ -73,24 +74,20 @@ ResultadoParser parser_analizar(const char* input) {
     return r;
 }
 
-static char* parsear_nombre(char** cursor) {
+static char* obtener_cadena_pre_igual(char** cursor) {
     *cursor += 5;
     avanzar_hasta_noespacio(cursor);
     if (**cursor) {
-        // Asumo que un espacio entre el nombre y el '=' debe haber si o si, para diferenciar entre caracteres
-        // propios del nombre o no y determinar precisamente cuando termina el identificador.
-        char* espacio_despues_de_nombre = strchr(*cursor, ' ');
-        if (espacio_despues_de_nombre) {
-            *espacio_despues_de_nombre = '\0';
-            char* nombre = *cursor;
-            if (formato_alfanumerico(nombre)) {
-                *cursor = espacio_despues_de_nombre + 1;
+        char* inicio = *cursor;
+        char* igual = strchr(*cursor, '=');
+        if (igual) {
+            *igual = '\0';
+            char* cadena_pre_igual = inicio;
+            cadena_pre_igual = str_trim(cadena_pre_igual);
+            if (formato_alfanumerico(cadena_pre_igual)) {
+                *cursor = igual + 1;
                 avanzar_hasta_noespacio(cursor);
-                if (**cursor && **cursor == '=') {
-                    (*cursor)++;
-                    avanzar_hasta_noespacio(cursor);
-                    return nombre;
-                }
+                return cadena_pre_igual;
             }
         }
     }

@@ -75,6 +75,11 @@ static Lista* lista_crear() {
     return lista;
 }
 
+void definir_lista(char* nombre, void* lista, Declaraciones declaraciones) {
+    Declaracion* declaracion = declaracion_crear(LISTA, nombre, (Lista*)lista);
+    declarar_y_manejar_output(declaraciones, declaracion);
+}
+
 
 
 

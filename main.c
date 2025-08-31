@@ -8,9 +8,8 @@
 
 int main(void) {
     printf("\n------------INTERPRETE DE LISTAS EDyA1------------\n");
-    char buffer[10000];
+    char buffer[2000];
     int en_funcionamiento = 1;
-    Declaracion* declaracion;
     Declaraciones declaraciones = declaraciones_crear();
     while (en_funcionamiento) {
         printf(">>> ");
@@ -19,12 +18,10 @@ int main(void) {
 
         switch (r.tipo) {
             case OP_DEFL:
-                declaracion = declaracion_crear(LISTA, r.identificador, (Lista*)r.expresion);
-                hashear_y_manejar_output(declaraciones, declaracion);
+                definir_lista(r.identificador, r.expresion, declaraciones);
                 break;
             case OP_DEFF:
-                declaracion = declaracion_crear(FUNCION, r.identificador, (Funcion*)r.expresion);
-                hashear_y_manejar_output(declaraciones, declaracion);
+                definir_funcion(r.identificador, r.expresion, declaraciones);
                 break;
             case OP_APPLY:
                 printf("Aplicar funcion '%s'\n", r.identificador);

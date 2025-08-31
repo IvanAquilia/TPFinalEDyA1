@@ -134,10 +134,10 @@ Declaraciones declaraciones_crear() {
     return declaraciones;
 }
 
-void hashear_y_manejar_output(Declaraciones declaraciones, Declaracion* declaracion) {
-    int insertado = guardar_declaracion(declaraciones, declaracion);
+void declarar_y_manejar_output(Declaraciones declaraciones, Declaracion* declaracion) {
+    int guardada = guardar_declaracion(declaraciones, declaracion);
 
-    if (!insertado)
+    if (!guardada)
         if (declaracion->tipo == LISTA)
             printf("ERROR: ya existe una lista con nombre '%s'\n", declaracion->nombre);
         else

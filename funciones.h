@@ -1,6 +1,7 @@
 #ifndef FUNCIONES_H
 #define FUNCIONES_H
 #include "garray.h"
+#include "utils.h"
 
 /*
  * Cada funcion es un array dinamico de los nombres (char*) de las funciones que la compone en orden.
@@ -32,4 +33,7 @@ Funcion* copiar_funcion(const Funcion* funcion);
  */
 void visitar_funcion(const Funcion* funcion);
 
+/*
+ */
+void definir_funcion(char* nombre, void* funcion, Declaraciones declaraciones);
 #endif

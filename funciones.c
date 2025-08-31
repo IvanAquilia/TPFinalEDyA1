@@ -65,3 +65,8 @@ static Funcion* funcion_crear() {
 
     return funcion;
 }
+
+void definir_funcion(char* nombre, void* funcion, Declaraciones declaraciones) {
+    Declaracion* declaracion = declaracion_crear(FUNCION, nombre, (Funcion*)funcion);
+    declarar_y_manejar_output(declaraciones, declaracion);
+}

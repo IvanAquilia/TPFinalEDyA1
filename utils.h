@@ -48,8 +48,8 @@ Declaraciones declaraciones_crear();
 
 
 /*
- * Auxiliares usadas en main.c
+ * Auxiliares
  */
-void hashear_y_manejar_output(Declaraciones declaraciones, Declaracion* declaracion);
+void declarar_y_manejar_output(Declaraciones declaraciones, Declaracion* declaracion);
 
 #endif

@@ -1,6 +1,7 @@
 #ifndef LISTAS_H
 #define LISTAS_H
 #include "glist.h"
+#include "utils.h"
 
 /**
  * Las listas definidas por el usuario son representadas mediante
@@ -31,4 +32,7 @@ Lista* copiar_lista(const Lista* lista);
  */
 void visitar_lista(const Lista* lista);
 
+/*
+ */
+void definir_lista(char* nombre, void* lista, Declaraciones declaraciones);
 #endif
