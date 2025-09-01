@@ -39,8 +39,6 @@ void visitar_int(const int* dato);
 /*
  * Utils declaracion/declaraciones
  */
-Declaracion* declaracion_crear(TipoDeclaracion tipo, char* nombre, void* valor);
-int cmp_declaracion(const Declaracion* a, const Declaracion* b);
 void destruir_declaracion(Declaracion* declaracion);
 Declaracion* copiar_declaracion(const Declaracion* declaracion);
 void visitar_declaracion(const Declaracion* declaracion);
@@ -50,6 +48,7 @@ Declaraciones declaraciones_crear();
 /*
  * Auxiliares
  */
-void declarar_y_manejar_output(Declaraciones declaraciones, Declaracion* declaracion);
+int guardar_declaracion(Declaraciones declaraciones, Declaracion* declaracion);
+void* obtener_def_usuario(Declaraciones declaraciones, const void* clave, TipoDeclaracion tipo);
 
 #endif

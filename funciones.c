@@ -1,10 +1,18 @@
 #include "funciones.h"
+
+#include <stdio.h>
+
 #include "string_utils.h"
 #include "utils.h"
+#include <stdlib.h>
+
+#include "listas.h"
+#include "parser.h"
 
 #define LARGO_FUNCIONES 1000
 
 static Funcion* funcion_crear();
+static void aplicar_funcion_interno(Funcion* funcion, Lista* lista);
 
 /*
  * Ya recibe string verificada que es una seguidilla de alpha +
@@ -41,7 +49,7 @@ Funcion* strfunc_to_array(char* cadena) {
 }
 
 void componer_funcion(Funcion* funcion, char* nombre) {
-    garray_insertar(funcion, (void*)nombre);
+    garray_insertar(funcion, nombre);
 }
 
 void destruir_funcion(Funcion* funcion) {
@@ -56,6 +64,51 @@ void visitar_funcion(const Funcion* funcion) {
     garray_imprimir(funcion);
 }
 
+int definir_funcion(char* nombre, void* funcion, Declaraciones declaraciones) {
+    Declaracion declaracion;
+    declaracion.nombre = nombre;
+    declaracion.valor = (Funcion*)funcion;
+    declaracion.tipo = FUNCION;
+
+    return guardar_declaracion(declaraciones, &declaracion);
+}
+
+void aplicar_funcion(Funcion* funcion, Lista* lista) {
+    visitar_funcion(funcion);
+    visitar_lista(lista);
+}
+
+int obtener_funcion_y_lista(Funcion** funcion, Lista** lista,
+                            char* nombre_funcion, char* string_lista,
+                            int in_place, Declaraciones declaraciones) {
+    *funcion = (Funcion*)obtener_def_usuario(declaraciones, nombre_funcion, FUNCION);
+
+    if (in_place && verificar_lista(string_lista))
+        *lista = strlist_to_lista(string_lista);
+    else
+        *lista = (Lista*)obtener_def_usuario(declaraciones, string_lista, LISTA);
+
+    if (*funcion && *lista)
+        return 1;
+    return 0;
+}
+
+void generar_funciones_base(Declaraciones declaraciones) {
+    char* funciones_base[6] = {
+        "Oi",
+        "Od",
+        "Si",
+        "Sd",
+        "Di",
+        "Dd"
+    };
+
+    for (int i = 0; i < 6; i++) {
+        char* funcion[1] = { funciones_base[i] };
+        definir_funcion(funciones_base[i], funcion, declaraciones); // NO ANDA
+    }
+}
+
 static Funcion* funcion_crear() {
     Funcion* funcion = garray_crear(LARGO_FUNCIONES,
                                     (FuncionComparadora)cmp_str,
@@ -66,7 +119,5 @@ static Funcion* funcion_crear() {
     return funcion;
 }
 
-void definir_funcion(char* nombre, void* funcion, Declaraciones declaraciones) {
-    Declaracion* declaracion = declaracion_crear(FUNCION, nombre, (Funcion*)funcion);
-    declarar_y_manejar_output(declaraciones, declaracion);
+static void aplicar_funcion_interno(Funcion* funcion, Lista* lista) {
 }

@@ -24,8 +24,8 @@ Lista* strlist_to_lista(char* cadena) {
         cadena[len-1] = '\0';
         char* cursor = cadena + 1;
 
-        // Aprovecho la poca flexibilidad de
-        // separadores (solo ',' y ' ') y así uso strtok
+        // Aprovecho la poca flexibilidad de separadores (solo ',' y ' ')
+        // y así uso strtok para ir agarrando los numeros
         char* token = strtok(cursor, ", ");
         char* endptr_error;
         while (token != NULL && !invalido) {
@@ -33,7 +33,7 @@ Lista* strlist_to_lista(char* cadena) {
             if (*endptr_error == '\0') {
                 int value = (int)num;
                 if (value == num)
-                    // Verificar que no hubo overflow ya que las
+                    // Verifico que no hubo overflow ya que las
                     // funciones (copy, cmp...) de la lista esperan int's
                     lista_insertar_entero(lista, &value);
                 else
@@ -52,7 +52,7 @@ Lista* strlist_to_lista(char* cadena) {
 }
 
 void lista_insertar_entero(Lista* lista, int* entero) {
-    glist_insertar_final(lista, (void*)entero);
+    glist_insertar_final(lista, entero);
 }
 
 void destruir_lista(Lista* lista) {
@@ -75,9 +75,13 @@ static Lista* lista_crear() {
     return lista;
 }
 
-void definir_lista(char* nombre, void* lista, Declaraciones declaraciones) {
-    Declaracion* declaracion = declaracion_crear(LISTA, nombre, (Lista*)lista);
-    declarar_y_manejar_output(declaraciones, declaracion);
+int definir_lista(char* nombre, void* lista, Declaraciones declaraciones) {
+    Declaracion declaracion;
+    declaracion.nombre = nombre;
+    declaracion.valor = (Lista*)lista;
+    declaracion.tipo = LISTA;
+
+    return guardar_declaracion(declaraciones, &declaracion);
 }
 
 

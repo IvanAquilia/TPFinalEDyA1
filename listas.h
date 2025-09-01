@@ -34,5 +34,5 @@ void visitar_lista(const Lista* lista);
 
 /*
  */
-void definir_lista(char* nombre, void* lista, Declaraciones declaraciones);
+int definir_lista(char* nombre, void* lista, Declaraciones declaraciones);
 #endif

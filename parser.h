@@ -11,15 +11,29 @@ typedef enum {
 } TipoOperacion;
 
 typedef struct {
+    char* nombre_funcion;  // Nombre funcion a aplicar
+    char* string_lista;    // Nombre de lista, o lista in-place ([1,2,3...]).
+    int in_place;
+} ApplyParseado;
+
+typedef struct {
+    char* identificador; // Nombre de función o lista
+    void* expresion;     // Definición o expresión asociada
+} DefParseado;
+
+typedef struct {
     TipoOperacion tipo;
-    char* identificador;   // Nombre de función o lista
-    void* expresion;       // Definición o expresión asociada
+    void* expresion_parseada;
 } ResultadoParser;
 
 /**
  * Dada la linea ingresada por el usuario
  */
 ResultadoParser parser_analizar(const char* linea);
+
+/*
+ */
+int verificar_lista(char* lista_str);
 
 /*
  */

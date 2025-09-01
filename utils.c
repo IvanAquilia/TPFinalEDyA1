@@ -10,8 +10,6 @@
 
 #define CANTIDAD_DECLARACIONES 10000
 
-static int guardar_declaracion(Declaraciones declaraciones, Declaracion* declaracion);
-
 // -------------- Funciones de comparacion, copia... etc. pasadas a las estructuras -------------- //
 
 // ----------- STRINGS
@@ -58,32 +56,6 @@ void visitar_int(const int* entero) {
 }
 
 // ----------- DECLARACIONES
-Declaracion* declaracion_crear(TipoDeclaracion tipo, char* nombre, void* valor) {
-    Declaracion* declaracion = malloc(sizeof(Declaracion));
-    assert(declaracion != NULL);
-
-    declaracion->nombre = malloc(strlen(nombre) + 1);
-    assert(declaracion->nombre != NULL);
-    strcpy(declaracion->nombre, nombre);
-    declaracion->tipo = tipo;
-
-    if (declaracion->tipo == LISTA) {
-        declaracion->valor = (void*)copiar_lista((Lista*)valor);
-    } else {
-        declaracion->valor = (void*)copiar_funcion((Funcion*)valor);;
-    }
-
-    return declaracion;
-}
-
-int cmp_declaracion(const Declaracion* a, const Declaracion* b) {
-    if (a->tipo == b->tipo) {
-        int nombres_iguales = strcmp(a->nombre, b->nombre);
-        return nombres_iguales;
-    }
-    return -1;
-}
-
 void destruir_declaracion(Declaracion* declaracion) {
     free(declaracion->nombre);
     if (declaracion->tipo == LISTA)
@@ -104,9 +76,9 @@ Declaracion* copiar_declaracion(const Declaracion* declaracion) {
 
     nueva_declaracion->tipo = declaracion->tipo;
     if (declaracion->tipo == LISTA) {
-        nueva_declaracion->valor = copiar_lista(declaracion->valor);
+        nueva_declaracion->valor = (void*)copiar_lista(declaracion->valor);
     } else {
-        nueva_declaracion->valor = (void*)copiar_funcion(declaracion->valor);;
+        nueva_declaracion->valor = (void*)copiar_funcion(declaracion->valor);
     }
 
     return nueva_declaracion;
@@ -126,32 +98,31 @@ void visitar_declaracion(const Declaracion* declaracion) {
 
 Declaraciones declaraciones_crear() {
     Declaraciones declaraciones = tabla_hash_crear(CANTIDAD_DECLARACIONES,
-                                                    (FuncionHash)hash_declaracion,
-                                                    (FuncionComparadora)cmp_declaracion,
+                                                    (FuncionHash)hash_clave,
+                                                    (FuncionComparadora)cmp_str,
                                                     (FuncionDestructora)destruir_declaracion,
+                                                    (FuncionDestructora)destruir_str,
                                                     (FuncionCopia)copiar_declaracion,
+                                                    (FuncionCopia)copiar_str,
                                                     (FuncionVisitante)visitar_declaracion);
     return declaraciones;
 }
 
+// ----------- AUXILIARES/VARIAS
 void declarar_y_manejar_output(Declaraciones declaraciones, Declaracion* declaracion) {
     int guardada = guardar_declaracion(declaraciones, declaracion);
 
-    if (!guardada)
-        if (declaracion->tipo == LISTA)
-            printf("ERROR: ya existe una lista con nombre '%s'\n", declaracion->nombre);
-        else
-            printf("ERROR: ya existe una funcion con nombre '%s'\n", declaracion->nombre);
-    else
-        if (declaracion->tipo == LISTA)
-            printf("Lista '%s' definida con exito\n", declaracion->nombre);
-        else
-            printf("Funcion '%s' definida con exito\n", declaracion->nombre);
-
-    destruir_declaracion(declaracion);
 }
 
-static int guardar_declaracion(Declaraciones declaraciones, Declaracion* declaracion) {
-    return tabla_hash_insertar(declaraciones, (void*)declaracion);
+void* obtener_def_usuario(Declaraciones declaraciones, const void* clave, TipoDeclaracion tipo) {
+    Declaracion* declaracion = (Declaracion*)tabla_hash_buscar(declaraciones, clave);
+    if (declaracion && declaracion->tipo == tipo)
+        return declaracion->valor;
+    return NULL;
 }
 
+int guardar_declaracion(Declaraciones declaraciones, Declaracion* declaracion) {
+    // Genero una copia y guardo en la tabla hash la declaracion "nombre: lista/funcion"
+    int guardada = tabla_hash_insertar(declaraciones, declaracion->nombre, declaracion);
+    return guardada;
+}

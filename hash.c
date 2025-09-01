@@ -10,16 +10,20 @@ static void tabla_hash_redimensionar(HashTable* tabla, unsigned int nueva_capaci
 // ------------------ Crear / Destruir ------------------
 HashTable* tabla_hash_crear(int capacidad,
                             FuncionHash hash,
-                            FuncionComparadora cmp,
+                            FuncionComparadora cmp_clave,
                             FuncionDestructora destruir,
+                            FuncionDestructora destruir_clave,
                             FuncionCopia copiar,
+                            FuncionCopia copiar_clave,
                             FuncionVisitante visitar) {
     HashTable* tabla = malloc(sizeof(HashTable));
     assert(tabla != NULL);
     assert(hash != NULL);
-    assert(cmp != NULL);
-    assert(destruir != NULL);
-    assert(copiar != NULL);
+
+    assert(cmp_clave != NULL);
+    assert(destruir != NULL); assert(destruir_clave != NULL);
+    assert(copiar != NULL); assert(copiar_clave != NULL);
+
     assert(visitar != NULL);
 
     tabla->capacidad = capacidad;
@@ -28,9 +32,13 @@ HashTable* tabla_hash_crear(int capacidad,
     assert(tabla->buckets != NULL);
 
     tabla->hash = hash;
-    tabla->cmp = cmp;
+    tabla->cmp_clave = cmp_clave;
+
     tabla->destruir = destruir;
+    tabla->destruir_clave = destruir_clave;
     tabla->copiar = copiar;
+    tabla->copiar_clave = copiar_clave;
+
     tabla->visitar = visitar;
 
     return tabla;
@@ -40,6 +48,7 @@ void tabla_hash_destruir(HashTable* tabla) {
     for (unsigned int i = 0; i < tabla->capacidad; i++) {
         if (tabla->buckets[i] != NULL) {
             tabla->destruir(tabla->buckets[i]->dato);
+            tabla->destruir_clave(tabla->buckets[i]->clave);
             free(tabla->buckets[i]);
         }
     }
@@ -48,12 +57,12 @@ void tabla_hash_destruir(HashTable* tabla) {
 }
 
 // ------------------ Insertar ------------------
-int tabla_hash_insertar(HashTable* tabla, const void* dato) {
-    if (dato == NULL)
+int tabla_hash_insertar(HashTable* tabla, const void* clave, const void* dato) {
+    if (dato == NULL || clave == NULL)
         return 0;
 
     unsigned int capacidad = tabla->capacidad;
-    unsigned long h = tabla->hash(dato);
+    unsigned long h = tabla->hash(clave);
     unsigned long indice = h % capacidad;
 
     int insertado = 0, repetido = 0;
@@ -65,10 +74,11 @@ int tabla_hash_insertar(HashTable* tabla, const void* dato) {
             assert(nueva != NULL);
 
             nueva->dato = tabla->copiar(dato);
+            nueva->clave = tabla->copiar_clave(clave);
             tabla->buckets[pos] = nueva;
             tabla->elementos++;
             insertado = 1;
-        } else if (tabla->cmp(tabla->buckets[pos]->dato, dato) == 0) {
+        } else if (tabla->cmp_clave(tabla->buckets[pos]->clave, clave) == 0) {
             repetido = 1;
         }
     }
@@ -84,12 +94,12 @@ int tabla_hash_insertar(HashTable* tabla, const void* dato) {
 }
 
 // ------------------ Buscar ------------------
-void* tabla_hash_buscar(HashTable* tabla, const void* dato) {
-    if (dato == NULL)
+void* tabla_hash_buscar(HashTable* tabla, const void* clave) {
+    if (clave == NULL)
         return NULL;
 
     unsigned int capacidad = tabla->capacidad;
-    unsigned long h = tabla->hash(dato);
+    unsigned long h = tabla->hash(clave);
     unsigned long indice = h % capacidad;
     void* encontrado = NULL;
 
@@ -100,7 +110,7 @@ void* tabla_hash_buscar(HashTable* tabla, const void* dato) {
 
     for (unsigned int i = 0; i < tabla->capacidad && !encontrado; i++) {
         unsigned int pos = (indice + i) % capacidad;
-        if (tabla->cmp(tabla->buckets[pos]->dato, dato) == 0) {
+        if (tabla->cmp_clave(tabla->buckets[pos]->clave, clave) == 0) {
             encontrado = tabla->buckets[pos]->dato;
         }
     }
@@ -125,16 +135,19 @@ static void tabla_hash_redimensionar(HashTable* tabla, unsigned int nueva_capaci
     for (unsigned int i = 0; i < tabla->capacidad; i++) {
         if (tabla->buckets[i] != NULL) {
             void* dato = tabla->buckets[i]->dato;
-            unsigned long h = tabla->hash(dato);
+            void* clave = tabla->buckets[i]->clave;
+            unsigned long h = tabla->hash(clave);
             unsigned long indice = h % nueva_capacidad;
             int insertado = 0;
 
+            // For de linear probing para cada elemento de la nueva tabla
             for (unsigned int j = 0; j < nueva_capacidad && !insertado; j++) {
                 unsigned int pos = (indice + j) % nueva_capacidad;
                 if (nuevos_buckets[pos] == NULL) {
                     Entrada* nueva = malloc(sizeof(Entrada));
                     assert(nueva != NULL);
 
+                    nueva->clave = tabla->copiar_clave(clave);
                     nueva->dato = tabla->copiar(dato);
                     nuevos_buckets[pos] = nueva;
                     insertado = 1;

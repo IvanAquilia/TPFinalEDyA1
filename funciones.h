@@ -1,6 +1,7 @@
 #ifndef FUNCIONES_H
 #define FUNCIONES_H
 #include "garray.h"
+#include "listas.h"
 #include "utils.h"
 
 /*
@@ -35,5 +36,20 @@ void visitar_funcion(const Funcion* funcion);
 
 /*
  */
-void definir_funcion(char* nombre, void* funcion, Declaraciones declaraciones);
+int definir_funcion(char* nombre, void* funcion, Declaraciones declaraciones);
+
+/*
+ */
+void aplicar_funcion(Funcion* funcion, Lista* lista);
+
+/*
+ */
+int obtener_funcion_y_lista(Funcion** funcion, Lista** lista,
+                            char* nombre_funcion, char* string_lista,
+                            int in_place, Declaraciones declaraciones);
+
+/*
+ */
+void generar_funciones_base(Declaraciones declaraciones);
+
 #endif

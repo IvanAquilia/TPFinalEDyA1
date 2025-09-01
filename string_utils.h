@@ -5,7 +5,7 @@
 
 /*
  */
-unsigned long hash_declaracion(const Declaracion* dato);
+unsigned long hash_clave(const char* string);
 
 /*
  */

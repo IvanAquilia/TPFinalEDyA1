@@ -11,6 +11,7 @@ typedef void (*FuncionVisitante)(const void* dato);
 // ------------------ Definición de estructuras ------------------
 typedef struct {
     void* dato;
+    void* clave;
 } Entrada;
 
 typedef struct {
@@ -19,9 +20,16 @@ typedef struct {
     unsigned int elementos;
 
     FuncionHash hash;
+
     FuncionComparadora cmp;
+    FuncionComparadora cmp_clave;
+
     FuncionDestructora destruir;
+    FuncionDestructora destruir_clave;
+
     FuncionCopia copiar;
+    FuncionCopia copiar_clave;
+
     FuncionVisitante visitar;
 } HashTable;
 
@@ -32,9 +40,11 @@ typedef struct {
  */
 HashTable* tabla_hash_crear(int capacidad,
                             FuncionHash hash,
-                            FuncionComparadora cmp,
+                            FuncionComparadora cmp_clave,
                             FuncionDestructora destruir,
+                            FuncionDestructora destruir_clave,
                             FuncionCopia copiar,
+                            FuncionCopia copiar_clave,
                             FuncionVisitante visitar);
 
 /*
@@ -43,17 +53,18 @@ HashTable* tabla_hash_crear(int capacidad,
 void tabla_hash_destruir(HashTable* tabla);
 
 /*
- * Inserta un elemento, no permite repetidos. Devuelve 1 si se pudo insertar, de lo contrario 0.
+ * Inserta un elemento dado el hasheo obtenido a partir de su clave, no permite claves repetidas.
+ * Devuelve 1 si se pudo insertar, de lo contrario 0.
  */
-int tabla_hash_insertar(HashTable* tabla, const void* dato);
+int tabla_hash_insertar(HashTable* tabla, const void* clave, const void* dato);
 
 /*
- * Buscar un elemento. Devuelve el puntero guardado o NULL.
+ * Buscar un elemento dada su clave. Devuelve el puntero guardado "dato" o NULL.
  */
-void* tabla_hash_buscar(HashTable* tabla, const void* dato);
+void* tabla_hash_buscar(HashTable* tabla, const void* clave);
 
 /*
- * Recorrer todos los elementos aplicando un visitante
+ * Recorrer todos los elementos aplicando un visitante a cada "dato" de cada Entrada.
  */
 void tabla_hash_recorrer(HashTable* tabla);
 

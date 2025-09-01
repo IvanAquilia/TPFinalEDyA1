@@ -6,12 +6,10 @@
 #include <string.h>
 
 // ------ Función hash djb2, hashea nombre del objeto que se esta definiendo (Funcion / Lista) ------
-unsigned long hash_declaracion(const Declaracion* dato) { // recibe dato NO NULO
-    char* nombre = dato->nombre;
-
+unsigned long hash_clave(const char* string) { // recibe dato NO NULO
     unsigned long h = 5381;
     int c;
-    while ((c = *nombre++))
+    while ((c = *string++))
         h = ((h << 5) + h) + c;
     return h;
 }
