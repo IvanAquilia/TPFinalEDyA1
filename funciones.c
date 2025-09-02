@@ -1,6 +1,7 @@
 #include "funciones.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #include "string_utils.h"
 #include "utils.h"
@@ -8,8 +9,11 @@
 #include "parser.h"
 
 #define LARGO_FUNCIONES 200
+#define MAX_RECURSIONES 5000
 
-static void aplicar_funcion_interno(Funcion* funcion, Lista* lista);
+static void aplicar_funcion_interno(Funcion* funcion, Lista* lista, int acc_overflow, Declaraciones declaraciones);
+static void aplicar_base_o_buscar(char* nombre_funcion, Lista* lista, int acc_overflow, Declaraciones declaraciones);
+static TipoFuncion str_a_tipo(char* nombre_funcion);
 
 /*
  * Ya recibe string verificada que es una seguidilla de alpha +
@@ -107,10 +111,75 @@ int obtener_funcion_y_lista(Funcion** funcion, Lista** lista,
     return 0;
 }
 
-void aplicar_funcion(Funcion* funcion, Lista* lista) {
-    visitar_funcion(funcion);
-    visitar_lista(lista);
+void aplicar_funcion(Funcion* funcion, Lista* lista, Declaraciones declaraciones) {
+    Lista* list_temp = copiar_lista(lista);
+    aplicar_funcion_interno(funcion, list_temp, 1, declaraciones);
+    visitar_lista(list_temp);
+    printf("\n");
+    destruir_lista(list_temp);
 }
 
-static void aplicar_funcion_interno(Funcion* funcion, Lista* lista) {
+static void aplicar_funcion_interno(Funcion* funcion, Lista* lista, int acc_overflow, Declaraciones declaraciones) {
+    int cantidad_funcion = funcion->tamaño_actual;
+    for (int i = 0; i < cantidad_funcion; i++) {
+        aplicar_base_o_buscar((char*)funcion->elementos[i], lista, acc_overflow, declaraciones);
+    }
+}
+
+static void aplicar_base_o_buscar(char* nombre_funcion, Lista* lista, int acc_overflow, Declaraciones declaraciones) {
+    if (acc_overflow == MAX_RECURSIONES)
+        return;
+
+    TipoFuncion tipo = str_a_tipo(nombre_funcion);
+
+    switch (tipo) {
+        case Oi:
+            lista_insertar_natural_izquierda(lista, 0);
+            break;
+        case Od:
+            lista_insertar_natural_derecha(lista, 0);
+            break;
+        case Si:
+            if (!lista_vacia(lista)) {
+                lista_aumentar_izquierda(lista);
+            }
+            break;
+        case Sd:
+            if (!lista_vacia(lista)) {
+                lista_aumentar_derecha(lista);
+            }
+            break;
+        case Di:
+            if (!lista_vacia(lista)) {
+                lista_eliminar_izquierda(lista);
+            }
+            break;
+        case Dd:
+            if (!lista_vacia(lista)) {
+                lista_eliminar_derecha(lista);
+            }
+            break;
+        case Custom:
+            Funcion* funcion = obtener_def_usuario(declaraciones, nombre_funcion, FUNCION);
+            aplicar_funcion_interno(funcion, lista, acc_overflow + 1, declaraciones);
+            break;
+    }
+}
+
+static TipoFuncion str_a_tipo(char* nombre_funcion) {
+    TipoFuncion tipo = Custom;
+    if (strcmp(nombre_funcion, "Oi") == 0)
+        tipo = Oi;
+    if (strcmp(nombre_funcion, "Od") == 0)
+        tipo = Od;
+    if (strcmp(nombre_funcion, "Si") == 0)
+        tipo = Si;
+    if (strcmp(nombre_funcion, "Sd") == 0)
+        tipo = Sd;
+    if (strcmp(nombre_funcion, "Di") == 0)
+        tipo = Di;
+    if (strcmp(nombre_funcion, "Dd") == 0)
+        tipo = Dd;
+
+    return tipo;
 }

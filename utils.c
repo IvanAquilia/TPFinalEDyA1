@@ -136,10 +136,11 @@ int generar_funciones_base(Declaraciones declaraciones) {
     int todas_generadas = 1;
 
     // Las funciones base son como si se hiciera un hipotetico "deff Di = Di", "deff Od = Od"... etc
-    // Guardo una string de sí misma dentro del array simplemente porque en el sistema por integridad
-    // no se permiten funciones nulas, pero en realidad es indiferente que haya alli ya que
-    // en los casos base de la recursion del apply solo considero el nombre
-    // de la funcion para ver si estoy situado en una funcion base.
+    // Guardo una string de sí misma dentro del array porque en el sistema por integridad
+    // no se permiten funciones nulas, de este modo, a la hora de aplicar una funcion,
+    // reutilizo la logica de buscar por nombre y, en el caso que
+    // no sean funciones base, llamar recursivamente.
+    // (Ver funcion aplicar_funcion() para ver en accion la naturalidad de esta decisión)
     for (int i = 0; i < 6 && todas_generadas; i++) {
         Funcion* funcion = funcion_crear();
         componer_funcion(funcion, funciones_base[i]);

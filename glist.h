@@ -70,6 +70,10 @@ void* glist_primero(GList* lista);
 void* glist_ultimo(GList* lista);
 
 /*
+ */
+int lista_vacia(GList* lista);
+
+/*
  * Buscar un elemento (usa la funcion comparadora)
  */
 void* glist_buscar(GList* lista, void* dato);

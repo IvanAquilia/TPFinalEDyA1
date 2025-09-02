@@ -4,11 +4,21 @@
 #include "listas.h"
 #include "utils.h"
 
+
+typedef enum {
+    Oi,
+    Od,
+    Si,
+    Sd,
+    Di,
+    Dd,
+    Custom
+} TipoFuncion;
+
 /*
  * Cada funcion es un array dinamico de los nombres (char*) de las funciones que la compone en orden.
  * Ej. : f1: ["0d", "Mi", "<Dd>", "Si"]
  */
-
 typedef GArray Funcion;
 
 /*
@@ -50,7 +60,7 @@ int obtener_funcion_y_lista(Funcion** funcion, Lista** lista,
 
 /*
  */
-void aplicar_funcion(Funcion* funcion, Lista* lista);
+void aplicar_funcion(Funcion* funcion, Lista* lista, Declaraciones declaraciones);
 
 
 #endif

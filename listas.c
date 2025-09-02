@@ -37,7 +37,7 @@ Lista* strlist_to_lista(char* cadena) {
                 // Verifico que no hubo overflow ya que las
                 // funciones (copy, cmp...) de la lista operan con int's
                 int numero = (int)l_numero;
-                lista_insertar_entero(lista, &numero);
+                lista_insertar_natural_derecha(lista, numero);
             } else {
                 invalido = 1;
             }
@@ -56,8 +56,39 @@ Lista* strlist_to_lista(char* cadena) {
     return lista;
 }
 
-void lista_insertar_entero(Lista* lista, int* entero) {
-    glist_insertar_final(lista, entero);
+void lista_insertar_natural_derecha(Lista* lista, int natural) {
+    int temp = natural;
+    glist_insertar_final(lista, &temp);
+}
+
+void lista_insertar_natural_izquierda(Lista* lista, int natural) {
+    int temp = natural;
+    glist_insertar_inicio(lista, &temp);
+}
+
+void lista_aumentar_derecha(Lista* lista) {
+    int* valor_aumentar = (int*)glist_ultimo(lista);
+    if (valor_aumentar) {
+        (*valor_aumentar)++;
+    }
+}
+
+void lista_aumentar_izquierda(Lista* lista) {
+    int* valor_aumentar = (int*)glist_primero(lista);
+    if (valor_aumentar) {
+        (*valor_aumentar)++;
+    }
+}
+
+void lista_eliminar_derecha(Lista* lista) {
+    // Como en mi utilizacion de la interfaz GList siempre voy
+    // a llamar esta funcion con listas no vacias puedo obviar el retorno.
+    int _retorno = glist_eliminar_final(lista);
+}
+
+void lista_eliminar_izquierda(Lista* lista) {
+    // Idem lista_eliminar_derecha
+    int _retorno = glist_eliminar_inicio(lista);
 }
 
 void destruir_lista(Lista* lista) {

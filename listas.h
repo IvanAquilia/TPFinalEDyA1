@@ -15,7 +15,27 @@ Lista* strlist_to_lista(char* cadena);
 
 /*
  */
-void lista_insertar_entero(Lista* lista, int* entero);
+void lista_insertar_natural_derecha(Lista* lista, int natural);
+
+/*
+ */
+void lista_insertar_natural_izquierda(Lista* lista, int natural);
+
+/*
+ */
+void lista_aumentar_derecha(Lista* lista);
+
+/*
+ */
+void lista_aumentar_izquierda(Lista* lista);
+
+/*
+ */
+void lista_eliminar_derecha(Lista* lista);
+
+/*
+ */
+void lista_eliminar_izquierda(Lista* lista);
 
 /*
  * Necesitada al destruir una Declaracion

@@ -62,7 +62,7 @@ int main(void) {
                         else
                             printf("ERROR: lista literal mal formada: '%s'\n", string_lista);
                 } else {
-                    aplicar_funcion(funcion, lista);
+                    aplicar_funcion(funcion, lista, declaraciones);
                 }
                 if (lista && in_place)
                     destruir_lista(lista); // Destruyo la lista dummy temporal creada para el in-place apply
