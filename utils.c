@@ -96,6 +96,13 @@ void visitar_declaracion(const Declaracion* declaracion) {
     }
 }
 
+int guardar_declaracion(Declaraciones declaraciones, Declaracion* declaracion) {
+    // Transfiero la propiedad de la Declaracion hacia la memoria que maneja la tabla hash generica
+    // internamente, genero una copia y guardo en la tabla hash la declaracion "nombre: lista/funcion".
+    int guardada = tabla_hash_insertar(declaraciones, declaracion->nombre, declaracion);
+    return guardada;
+}
+
 Declaraciones declaraciones_crear() {
     Declaraciones declaraciones = tabla_hash_crear(CANTIDAD_DECLARACIONES,
                                                     (FuncionHash)hash_clave,
@@ -109,10 +116,6 @@ Declaraciones declaraciones_crear() {
 }
 
 // ----------- AUXILIARES/VARIAS
-void declarar_y_manejar_output(Declaraciones declaraciones, Declaracion* declaracion) {
-    int guardada = guardar_declaracion(declaraciones, declaracion);
-
-}
 
 void* obtener_def_usuario(Declaraciones declaraciones, const void* clave, TipoDeclaracion tipo) {
     Declaracion* declaracion = (Declaracion*)tabla_hash_buscar(declaraciones, clave);
@@ -121,8 +124,31 @@ void* obtener_def_usuario(Declaraciones declaraciones, const void* clave, TipoDe
     return NULL;
 }
 
-int guardar_declaracion(Declaraciones declaraciones, Declaracion* declaracion) {
-    // Genero una copia y guardo en la tabla hash la declaracion "nombre: lista/funcion"
-    int guardada = tabla_hash_insertar(declaraciones, declaracion->nombre, declaracion);
-    return guardada;
+int generar_funciones_base(Declaraciones declaraciones) {
+    char funciones_base[6][3] = {
+        "Oi",
+        "Od",
+        "Si",
+        "Sd",
+        "Di",
+        "Dd"
+    };
+    int todas_generadas = 1;
+
+    // Las funciones base son como si se hiciera un hipotetico "deff Di = Di", "deff Od = Od"... etc
+    // Guardo una string de sí misma dentro del array simplemente porque en el sistema por integridad
+    // no se permiten funciones nulas, pero en realidad es indiferente que haya alli ya que
+    // en los casos base de la recursion del apply solo considero el nombre
+    // de la funcion para ver si estoy situado en una funcion base.
+    for (int i = 0; i < 6 && todas_generadas; i++) {
+        Funcion* funcion = funcion_crear();
+        componer_funcion(funcion, funciones_base[i]);
+        if (!definir_funcion(funciones_base[i], funcion, declaraciones))
+            todas_generadas = 0;
+        destruir_funcion(funcion); // Una vez transferida la propiedad del elemento a la
+                                   // tabla hash (con un deep-copy) destruyo esta version.
+    }
+
+    return todas_generadas;
 }
+

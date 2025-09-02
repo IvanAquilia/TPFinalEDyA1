@@ -7,66 +7,78 @@
 #include <stdio.h>
 
 int main(void) {
+    Declaraciones declaraciones = declaraciones_crear();
+    if (!generar_funciones_base(declaraciones)) {
+        printf("ERROR: error fatal al intentar inicializar el programa.\n");
+        return 1;
+    }
+
     printf("\n------------INTERPRETE DE LISTAS EDyA1------------\n");
     char buffer[2000];
     int en_funcionamiento = 1, guardada;
-    Declaraciones declaraciones = declaraciones_crear();
-    generar_funciones_base(declaraciones);
-    DefParseado* def_parseado;
 
     while (en_funcionamiento) {
         printf(">>> ");
         fgets(buffer, sizeof(buffer), stdin);
-        ResultadoParser r = parser_analizar(buffer);
+        ResultadoParser r = parser_analizar(buffer, declaraciones);
 
         switch (r.tipo) {
             case OP_DEFL:
-                def_parseado = (DefParseado*)(r.expresion_parseada);
-                guardada = definir_lista(def_parseado->identificador, def_parseado->expresion, declaraciones);
+                char* id_lista = r.parte_izquierda;
+                void* def_lista = r.parte_derecha;
+                guardada = definir_lista(id_lista, def_lista, declaraciones);
                 if (!guardada)
-                    printf("ERROR: ya existe un elemento con el nombre '%s' en el programa\n", def_parseado->identificador);
+                    printf("ERROR: ya existe un elemento con el nombre '%s' en el programa\n", id_lista);
                 else
-                    printf("Lista '%s' definida con exito\n", def_parseado->identificador);
+                    printf("Lista '%s' definida con exito\n", id_lista);
+
                 break;
             case OP_DEFF:
-                def_parseado = (DefParseado*)(r.expresion_parseada);
-                guardada = definir_funcion(def_parseado->identificador, def_parseado->expresion, declaraciones);
+                char* id_funcion = r.parte_izquierda;
+                void* def_funcion = r.parte_derecha;
+                guardada = definir_funcion(id_funcion, def_funcion, declaraciones);
                 if (!guardada)
-                    printf("ERROR: ya existe un elemento con el nombre '%s' en el programa\n", def_parseado->identificador);
+                    printf("ERROR: ya existe un elemento con el nombre '%s' en el programa\n", id_funcion);
                 else
-                    printf("Funcion '%s' definida con exito\n", def_parseado->identificador);
+                    printf("Funcion '%s' definida con exito\n", id_funcion);
+
                 break;
             case OP_APPLY:
-                ApplyParseado* apply_parseado = (ApplyParseado*)(r.expresion_parseada);
-                Funcion* funcion;
-                Lista* lista;
-                char *nombre_funcion = apply_parseado->nombre_funcion,
-                     *string_lista = apply_parseado->string_lista;
-                int in_place = apply_parseado->in_place;
+                char* nombre_funcion = r.parte_izquierda;
+                char* string_lista = (char*)r.parte_derecha;
+                int in_place = r.in_place;
+                Funcion* funcion; Lista* lista;
                 int obtenidas = obtener_funcion_y_lista(&funcion, &lista,
-                                                        apply_parseado->nombre_funcion,
-                                                        apply_parseado->string_lista,
-                                                        apply_parseado->in_place,
+                                                        nombre_funcion,
+                                                        string_lista,
+                                                        in_place,
                                                         declaraciones);
                 if (!obtenidas) {
                     if (!funcion)
-                        printf("ERROR: No existe la funcion de nombre '%s'\n", nombre_funcion);
-                    else if (!lista)
+                        printf("ERROR: no existe la funcion de nombre '%s'\n", nombre_funcion);
+                    if (!lista)
                         if (!in_place)
-                            printf("ERROR: No existe la lista de nombre '%s'\n", string_lista);
+                            printf("ERROR: no existe la lista de nombre '%s'\n", string_lista);
                         else
-                            printf("ERROR: Lista mal formada: '%s'\n", string_lista);
+                            printf("ERROR: lista literal mal formada: '%s'\n", string_lista);
                 } else {
                     aplicar_funcion(funcion, lista);
                 }
                 if (lista && in_place)
                     destruir_lista(lista); // Destruyo la lista dummy temporal creada para el in-place apply
+
                 break;
             case OP_SEARCH:
                 printf("Buscar transformaciones\n");
                 break;
             case OP_INVALIDA:
                 printf("ERROR: Instruccion mal formada o no reconocida, intente nuevamente.\n");
+                break;
+            case OVERFLOW_LISTA:
+                printf("ERROR: la lista contiene naturales muy grandes que exceden el limite de procesamiento.\n");
+                break;
+            case FUNCION_INEXISTENTE:
+                printf("ERROR: solo se pueden componer funciones previamente existentes en el programa.\n");
                 break;
             case OP_EXIT:
                 en_funcionamiento = 0;

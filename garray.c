@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define CAPACIDAD_INICIAL 100
+#define CAPACIDAD_INICIAL 200
 #define FACTOR_CRECIMIENTO 2
 
 static void garray_redimensionar(GArray* array, int nueva_capacidad);

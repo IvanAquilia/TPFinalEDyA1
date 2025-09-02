@@ -13,7 +13,11 @@ typedef GArray Funcion;
 
 /*
  */
-Funcion* strfunc_to_array(char* cadena);
+Funcion* strfunc_to_array(char* cadena, Declaraciones declaraciones);
+
+/*
+ */
+Funcion* funcion_crear();
 
 /*
  */
@@ -40,16 +44,13 @@ int definir_funcion(char* nombre, void* funcion, Declaraciones declaraciones);
 
 /*
  */
-void aplicar_funcion(Funcion* funcion, Lista* lista);
-
-/*
- */
 int obtener_funcion_y_lista(Funcion** funcion, Lista** lista,
                             char* nombre_funcion, char* string_lista,
                             int in_place, Declaraciones declaraciones);
 
 /*
  */
-void generar_funciones_base(Declaraciones declaraciones);
+void aplicar_funcion(Funcion* funcion, Lista* lista);
+
 
 #endif

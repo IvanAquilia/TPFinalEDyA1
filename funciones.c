@@ -4,14 +4,11 @@
 
 #include "string_utils.h"
 #include "utils.h"
-#include <stdlib.h>
-
 #include "listas.h"
 #include "parser.h"
 
-#define LARGO_FUNCIONES 1000
+#define LARGO_FUNCIONES 200
 
-static Funcion* funcion_crear();
 static void aplicar_funcion_interno(Funcion* funcion, Lista* lista);
 
 /*
@@ -20,14 +17,14 @@ static void aplicar_funcion_interno(Funcion* funcion, Lista* lista);
  * en modificar la original, se va a destruie luego de
  * todos modos, necesito pasarlo a lista/array
  */
-Funcion* strfunc_to_array(char* cadena) {
+Funcion* strfunc_to_array(char* cadena, Declaraciones declaraciones) {
     Funcion* funcion = funcion_crear();
     char* cursor = cadena;
-    while (*cursor) {
+    int funcion_inexistente = 0;
+    while (*cursor && !funcion_inexistente) {
         avanzar_hasta_noespacio(&cursor);
+
         if (*cursor == '<' || *cursor == '>') {
-            // Uso memoria estatica, total luego en
-            // 'componer_funcion' guardo una copia con strcpy
             char simbolo_repeticion[2] = { *cursor, '\0' };
 
             componer_funcion(funcion, simbolo_repeticion);
@@ -37,16 +34,36 @@ Funcion* strfunc_to_array(char* cadena) {
             avanzar_hasta_espacio_o_repeticion(&cursor);
             char temp = *cursor;
             *cursor = '\0';
-            componer_funcion(funcion, nombre);
 
-            // Restauro el carácter que habia previamente antes del '\0'
-            // por si era algun '<' o '>' a tener en cuenta mas tarde
+            // Chequeo que la funcion a componer exista
+            if (obtener_def_usuario(declaraciones, nombre, FUNCION))
+                componer_funcion(funcion, nombre);
+            else
+                funcion_inexistente = 1;
+
+            // Devuelvo el valor previo a poner '\0' para no salir
+            // del while (*cursor == '\0') y moverme hasta la siguiente funcion.
             *cursor = temp;
         }
     }
 
+    if (funcion_inexistente) {
+        destruir_funcion(funcion);
+        return NULL;
+    }
     return funcion;
 }
+
+Funcion* funcion_crear() {
+    Funcion* funcion = garray_crear(LARGO_FUNCIONES,
+                                    (FuncionComparadora)cmp_str,
+                                    (FuncionDestructora)destruir_str,
+                                    (FuncionVisitante)visitar_str,
+                                    (FuncionCopia)copiar_str);
+
+    return funcion;
+}
+
 
 void componer_funcion(Funcion* funcion, char* nombre) {
     garray_insertar(funcion, nombre);
@@ -65,17 +82,14 @@ void visitar_funcion(const Funcion* funcion) {
 }
 
 int definir_funcion(char* nombre, void* funcion, Declaraciones declaraciones) {
+    // Creo mi declaracion temporal, al salir de aca se destruye,
+    // luego se destruye tambien la funcion en el main.c
     Declaracion declaracion;
     declaracion.nombre = nombre;
     declaracion.valor = (Funcion*)funcion;
     declaracion.tipo = FUNCION;
 
     return guardar_declaracion(declaraciones, &declaracion);
-}
-
-void aplicar_funcion(Funcion* funcion, Lista* lista) {
-    visitar_funcion(funcion);
-    visitar_lista(lista);
 }
 
 int obtener_funcion_y_lista(Funcion** funcion, Lista** lista,
@@ -93,30 +107,9 @@ int obtener_funcion_y_lista(Funcion** funcion, Lista** lista,
     return 0;
 }
 
-void generar_funciones_base(Declaraciones declaraciones) {
-    char* funciones_base[6] = {
-        "Oi",
-        "Od",
-        "Si",
-        "Sd",
-        "Di",
-        "Dd"
-    };
-
-    for (int i = 0; i < 6; i++) {
-        char* funcion[1] = { funciones_base[i] };
-        definir_funcion(funciones_base[i], funcion, declaraciones); // NO ANDA
-    }
-}
-
-static Funcion* funcion_crear() {
-    Funcion* funcion = garray_crear(LARGO_FUNCIONES,
-                                    (FuncionComparadora)cmp_str,
-                                    (FuncionDestructora)destruir_str,
-                                    (FuncionVisitante)visitar_str,
-                                    (FuncionCopia)copiar_str);
-
-    return funcion;
+void aplicar_funcion(Funcion* funcion, Lista* lista) {
+    visitar_funcion(funcion);
+    visitar_lista(lista);
 }
 
 static void aplicar_funcion_interno(Funcion* funcion, Lista* lista) {

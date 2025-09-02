@@ -9,11 +9,19 @@ unsigned long hash_clave(const char* string);
 
 /*
  */
-void avanzar_hasta_noespacio(char** cadena);
+void avanzar_hasta_noespacio(char** cursor);
 
 /*
  */
-void avanzar_hasta_espacio_o_repeticion(char** cadena);
+void avanzar_hasta_espacio_o_repeticion(char** cursor);
+
+/*
+ */
+void avanzar_hasta_nodigito(char** cursor);
+
+/*
+ */
+void avanzar_hasta_digito(char** cursor);
 
 /*
  */

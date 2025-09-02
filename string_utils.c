@@ -14,19 +14,25 @@ unsigned long hash_clave(const char* string) { // recibe dato NO NULO
     return h;
 }
 
-void avanzar_hasta_noespacio(char** cadena) {
-    while (isspace((unsigned char)**cadena)) {
-        (*cadena)++;
-    }
+void avanzar_hasta_noespacio(char** cursor) {
+    while (isspace((unsigned char)**cursor))
+        (*cursor)++;
 }
 
-void avanzar_hasta_espacio_o_repeticion(char** cadena) {
-    while (**cadena &&
-           !isspace((unsigned char)**cadena) &&
-           **cadena != '<' &&
-           **cadena != '>') {
-        (*cadena)++;
-           }
+void avanzar_hasta_espacio_o_repeticion(char** cursor) {
+    while (**cursor && !isspace((unsigned char)**cursor) &&
+           **cursor != '<' && **cursor != '>')
+        (*cursor)++;
+}
+
+void avanzar_hasta_nodigito(char** cursor) {
+    while (isdigit((unsigned char)**cursor))
+        (*cursor)++;
+}
+
+void avanzar_hasta_digito(char** cursor) {
+    while (**cursor && !isdigit((unsigned char)**cursor))
+        (*cursor)++;
 }
 
 char* str_dup(const char* original) {
@@ -42,12 +48,14 @@ char* str_dup(const char* original) {
 char* str_trim(char* s) {
     if (!s)
         return s;
-    while (isspace((unsigned char)*s)) s++;
+
+    avanzar_hasta_noespacio(&s);
     if (*s == '\0')
         return s;
 
     char* final = s + strlen(s) - 1;
-    while (final > s && isspace((unsigned char)*final)) final--;
+    while (final > s && isspace((unsigned char)*final))
+        final--;
     final[1] = '\0';
 
     return s;

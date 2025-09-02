@@ -42,13 +42,14 @@ void visitar_int(const int* dato);
 void destruir_declaracion(Declaracion* declaracion);
 Declaracion* copiar_declaracion(const Declaracion* declaracion);
 void visitar_declaracion(const Declaracion* declaracion);
+int guardar_declaracion(Declaraciones declaraciones, Declaracion* declaracion);
 Declaraciones declaraciones_crear();
 
 
 /*
  * Auxiliares
  */
-int guardar_declaracion(Declaraciones declaraciones, Declaracion* declaracion);
 void* obtener_def_usuario(Declaraciones declaraciones, const void* clave, TipoDeclaracion tipo);
+int generar_funciones_base(Declaraciones declaraciones);
 
 #endif
