@@ -3,12 +3,14 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include "utils.h"
+
 #define FACTOR_CARGA_MAX 0.7
 
 static void tabla_hash_redimensionar(HashTable* tabla, unsigned int nueva_capacidad);
 
 // ------------------ Crear / Destruir ------------------
-HashTable* tabla_hash_crear(int capacidad,
+HashTable* tabla_hash_crear(unsigned int capacidad,
                             FuncionHash hash,
                             FuncionComparadora cmp_clave,
                             FuncionDestructora destruir,
@@ -86,7 +88,8 @@ int tabla_hash_insertar(HashTable* tabla, const void* clave, const void* dato) {
     if (insertado) {
         double factor = (double)tabla->elementos / capacidad;
         if (factor > FACTOR_CARGA_MAX) {
-            tabla_hash_redimensionar(tabla, capacidad * 2);
+            unsigned int nueva_capacidad = siguiente_primo(capacidad * 2);
+            tabla_hash_redimensionar(tabla, nueva_capacidad);
         }
     }
 

@@ -126,11 +126,6 @@ void* glist_ultimo(GList* lista) {
     return lista->tail->dato;
 }
 
-int lista_vacia(GList* lista) {
-    if (lista->head == NULL)
-        return 1;
-    return 0;
-}
 // ------------------ Buscar ------------------
 void* glist_buscar(GList* lista, void* dato) {
     Nodo* actual = lista->head;

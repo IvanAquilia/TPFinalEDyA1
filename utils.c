@@ -1,14 +1,14 @@
 #include "utils.h"
-#include "glist.h"
 #include "listas.h"
 #include "funciones.h"
 #include "string_utils.h"
 #include <stdlib.h>
 #include <assert.h>
+#include <math.h>
 #include <string.h>
 #include <stdio.h>
 
-#define CANTIDAD_DECLARACIONES 10000
+#define CANTIDAD_DECLARACIONES 10007
 
 // -------------- Funciones de comparacion, copia... etc. pasadas a las estructuras -------------- //
 
@@ -32,8 +32,8 @@ void visitar_str(const char* dato) {
     printf("%s ", dato);
 }
 
-// ----------- ENTEROS
-int cmp_int(const int* a, const int* b) {
+// ----------- NATURALES
+int cmp_uint(const unsigned int* a, const unsigned int* b) {
     if (*a < *b)
         return -1;
     if (*a > *b)
@@ -41,18 +41,18 @@ int cmp_int(const int* a, const int* b) {
     return 0;
 }
 
-void destruir_int(int* entero) {
-    free(entero);
+void destruir_uint(unsigned int* natural) {
+    free(natural);
 }
 
-int* copiar_int(const int* entero) {
-    int* nuevo = malloc(sizeof(int));
-    *nuevo = *entero;
+unsigned int* copiar_uint(const unsigned int* natural) {
+    unsigned int* nuevo = malloc(sizeof(unsigned int));
+    *nuevo = *natural;
     return nuevo;
 }
 
-void visitar_int(const int* entero) {
-    printf("%d ", *entero);
+void visitar_uint(const unsigned int* natural) {
+    printf("%u ", *natural);
 }
 
 // ----------- DECLARACIONES
@@ -76,9 +76,9 @@ Declaracion* copiar_declaracion(const Declaracion* declaracion) {
 
     nueva_declaracion->tipo = declaracion->tipo;
     if (declaracion->tipo == LISTA) {
-        nueva_declaracion->valor = (void*)copiar_lista(declaracion->valor);
+        nueva_declaracion->valor = copiar_lista(declaracion->valor);
     } else {
-        nueva_declaracion->valor = (void*)copiar_funcion(declaracion->valor);
+        nueva_declaracion->valor = copiar_funcion(declaracion->valor);
     }
 
     return nueva_declaracion;
@@ -140,6 +140,8 @@ int generar_funciones_base(Declaraciones declaraciones) {
     // no se permiten funciones nulas, de este modo, a la hora de aplicar una funcion,
     // reutilizo la logica de buscar por nombre y, en el caso que
     // no sean funciones base, llamar recursivamente.
+    // Esto permite que el usuario pueda hacer aplicaciones directas del estilo:
+    // "apply Sd L1" y reutilizar el codigo ya escrito para funciones custom.
     // (Ver funcion aplicar_funcion() para ver en accion la naturalidad de esta decisión)
     for (int i = 0; i < 6 && todas_generadas; i++) {
         Funcion* funcion = funcion_crear();
@@ -151,5 +153,25 @@ int generar_funciones_base(Declaraciones declaraciones) {
     }
 
     return todas_generadas;
+}
+
+int es_primo(unsigned int n) {
+    if (n < 2) return 0;
+    if (n == 2) return 1;
+    if (n % 2 == 0) return 0;
+
+    unsigned int limite = (unsigned int)sqrt(n);
+    for (unsigned int i = 3; i <= limite; i += 2) {
+        if (n % i == 0) return 0;
+    }
+    return 1;
+}
+
+unsigned int siguiente_primo(unsigned int n) {
+    unsigned int candidato = n + 1;
+    while (!es_primo(candidato)) {
+        candidato++;
+    }
+    return candidato;
 }
 

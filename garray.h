@@ -1,5 +1,6 @@
 #ifndef GARRAY_H
 #define GARRAY_H
+#include "utils.h"
 
 // ------------------ Funciones genéricas usadas en la interfaz ------------------
 typedef int (*FuncionComparadora)(const void* a, const void* b);
@@ -10,8 +11,8 @@ typedef void (*FuncionVisitante)(const void* dato);
 // ------------------ Definición de estructuras ------------------
 typedef struct {
     void** elementos;
-    int capacidad;
-    int tamaño_actual;
+    unsigned int capacidad;
+    unsigned int tamaño_actual;
     FuncionComparadora cmp;
     FuncionDestructora destruir;
     FuncionVisitante visitar;
@@ -23,7 +24,7 @@ typedef struct {
 /*
  * Crear array vacío
  */
-GArray* garray_crear(int capacidad_inicial,
+GArray* garray_crear(unsigned int capacidad_inicial,
                     FuncionComparadora cmp,
                     FuncionDestructora destruir,
                     FuncionVisitante visitar,
@@ -57,7 +58,7 @@ void* garray_ultimo(GArray* array);
 /*
  * Obtener elemento en posición específica
  */
-void* garray_obtener(GArray* array, int posicion);
+void* garray_obtener(GArray* array, unsigned int posicion);
 
 /*
  * Buscar un elemento (usa la funcion comparadora)
@@ -73,10 +74,5 @@ void garray_imprimir(const GArray* array);
  * Copiar array (copia referencias, no clona datos)
  */
 GArray* garray_copiar(const GArray* original);
-
-/*
- * Obtener tamaño actual del array
- */
-int garray_tamaño(GArray* array);
 
 #endif

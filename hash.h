@@ -38,7 +38,7 @@ typedef struct {
 /*
  * Crear tabla hash con funciones auxiliares
  */
-HashTable* tabla_hash_crear(int capacidad,
+HashTable* tabla_hash_crear(unsigned int capacidad,
                             FuncionHash hash,
                             FuncionComparadora cmp_clave,
                             FuncionDestructora destruir,

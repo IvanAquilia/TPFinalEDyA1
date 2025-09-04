@@ -1,15 +1,17 @@
 #include "garray.h"
+#include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 
+
 #define CAPACIDAD_INICIAL 200
 #define FACTOR_CRECIMIENTO 2
 
-static void garray_redimensionar(GArray* array, int nueva_capacidad);
+static void garray_redimensionar(GArray* array, unsigned int nueva_capacidad);
 
 // ------------------ Crear / Destruir ------------------
-GArray* garray_crear(int capacidad_inicial,
+GArray* garray_crear(unsigned int capacidad_inicial,
                     FuncionComparadora cmp,
                     FuncionDestructora destruir,
                     FuncionVisitante visitar,
@@ -22,7 +24,7 @@ GArray* garray_crear(int capacidad_inicial,
     assert(visitar != NULL);
     assert(copiar != NULL);
 
-    int capacidad = (capacidad_inicial > 0) ? capacidad_inicial : CAPACIDAD_INICIAL;
+    unsigned int capacidad = (capacidad_inicial > 0) ? capacidad_inicial : CAPACIDAD_INICIAL;
     array->elementos = malloc(capacidad * sizeof(void*));
     assert(array->elementos != NULL);
 
@@ -39,7 +41,7 @@ GArray* garray_crear(int capacidad_inicial,
 void garray_destruir(GArray* array) {
     if (array == NULL) return;
 
-    for (int i = 0; i < array->tamaño_actual; i++) {
+    for (unsigned int i = 0; i < array->tamaño_actual; i++) {
         array->destruir(array->elementos[i]);
     }
 
@@ -83,8 +85,8 @@ void* garray_ultimo(GArray* array) {
     return array->elementos[array->tamaño_actual - 1];
 }
 
-void* garray_obtener(GArray* array, int posicion) {
-    if (posicion < 0 || posicion >= array->tamaño_actual) {
+void* garray_obtener(GArray* array, unsigned int posicion) {
+    if (posicion >= array->tamaño_actual) {
         return NULL;
     }
     return array->elementos[posicion];
@@ -92,7 +94,7 @@ void* garray_obtener(GArray* array, int posicion) {
 
 // ------------------ Buscar ------------------
 void* garray_buscar(GArray* array, void* dato) {
-    for (int i = 0; i < array->tamaño_actual; i++) {
+    for (unsigned int i = 0; i < array->tamaño_actual; i++) {
         if (array->cmp(array->elementos[i], dato) == 0) {
             return array->elementos[i];
         }
@@ -102,7 +104,7 @@ void* garray_buscar(GArray* array, void* dato) {
 
 // ------------------ Utilidades ------------------
 void garray_imprimir(const GArray* array) {
-    for (int i = 0; i < array->tamaño_actual; i++) {
+    for (unsigned int i = 0; i < array->tamaño_actual; i++) {
         array->visitar(array->elementos[i]);
     }
 }
@@ -114,19 +116,15 @@ GArray* garray_copiar(const GArray* original) {
                                  original->visitar,
                                  original->copiar);
 
-    for (int i = 0; i < original->tamaño_actual; i++) {
+    for (unsigned int i = 0; i < original->tamaño_actual; i++) {
         garray_insertar(copia, original->elementos[i]);
     }
 
     return copia;
 }
 
-int garray_tamaño_actual(GArray* array) {
-    return array->tamaño_actual;
-}
-
 // ------------------ Utilidades internas ------------------
-static void garray_redimensionar(GArray* array, int nueva_capacidad) {
+static void garray_redimensionar(GArray* array, unsigned int nueva_capacidad) {
     void** nuevos_elementos = realloc(array->elementos, nueva_capacidad * sizeof(void*));
     assert(nuevos_elementos != NULL);
 

@@ -7,3 +7,11 @@ CMakeLists.txt
 *.exe
 *.out
 programa
+    deff Mi = Oi <Si> Dd;
+    deff Md = Od <Sd> Di;
+    deff suma = Md Od <Sd Mi Sd Md> Di Dd Mi;
+
+
+
+
+tal heap usage: 8,541,217 allocs, 8,541,217 frees, 119,867,907 bytes allocated

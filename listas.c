@@ -1,18 +1,18 @@
 #include "listas.h"
 #include "string_utils.h"
 #include "utils.h"
+#include <assert.h>
 #include <limits.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-static Lista* lista_crear();
 
 /*
- * Ya recibe lista verificada que es minimo [] y tiene digitos validos dentro,
+ * Ya recibe lista verificada que es minimo [] y tiene digitos naturales validos dentro,
  * no importa modificar la original aca, necesito pasarla a lista total
- * despues se pisa el buffer e nuevo.
+ * despues se pisa el buffer de nuevo.
  */
 Lista* strlist_to_lista(char* cadena) {
     size_t len = strlen(cadena);
@@ -32,12 +32,16 @@ Lista* strlist_to_lista(char* cadena) {
             avanzar_hasta_nodigito(&cursor);
             char temp = *cursor;
             *cursor = '\0';
-            long int l_numero = strtol(numero_str, &endptr_error, 10);
-            if (l_numero < INT_MAX) {
-                // Verifico que no hubo overflow ya que las
-                // funciones (copy, cmp...) de la lista operan con int's
-                int numero = (int)l_numero;
-                lista_insertar_natural_derecha(lista, numero);
+
+            // Uso strtoul en vez de strol ya que dependiendo
+            // del modelo de programacion se tiene que:
+            // unsigned int (unsigned int) > long int | (en LP64, UNIX)
+            // long int > unsigned int (unsigned int) | (en LLP64, Windows)
+            // sin embargo usando unsigned long me aseguro siempre que va a entrar para luego chequear overflow.
+            unsigned long l_numero = strtoul(numero_str, &endptr_error, 10);
+            if (l_numero < UINT_MAX) {
+                unsigned int numero = (unsigned int)l_numero;
+                lista_insertar_numero_derecha(lista, numero);
             } else {
                 invalido = 1;
             }
@@ -56,25 +60,35 @@ Lista* strlist_to_lista(char* cadena) {
     return lista;
 }
 
-void lista_insertar_natural_derecha(Lista* lista, int natural) {
-    int temp = natural;
-    glist_insertar_final(lista, &temp);
+Lista* lista_crear() {
+    Lista* lista = malloc(sizeof(Lista));
+    assert(lista != NULL);
+    lista->glist = glist_crear((FuncionComparadora)cmp_uint,
+                                (FuncionDestructora)destruir_uint,
+                                (FuncionVisitante)visitar_uint,
+                                (FuncionCopia)copiar_uint);
+    return lista;
 }
 
-void lista_insertar_natural_izquierda(Lista* lista, int natural) {
-    int temp = natural;
-    glist_insertar_inicio(lista, &temp);
+void lista_insertar_numero_derecha(Lista* lista, unsigned int natural) {
+    unsigned int temp = natural;
+    glist_insertar_final(lista->glist, &temp);
+}
+
+void lista_insertar_numero_izquierda(Lista* lista, unsigned int natural) {
+    unsigned int temp = natural;
+    glist_insertar_inicio(lista->glist, &temp);
 }
 
 void lista_aumentar_derecha(Lista* lista) {
-    int* valor_aumentar = (int*)glist_ultimo(lista);
+    unsigned int* valor_aumentar = (unsigned int*)glist_ultimo(lista->glist);
     if (valor_aumentar) {
         (*valor_aumentar)++;
     }
 }
 
 void lista_aumentar_izquierda(Lista* lista) {
-    int* valor_aumentar = (int*)glist_primero(lista);
+    unsigned int* valor_aumentar = (unsigned int*)glist_primero(lista->glist);
     if (valor_aumentar) {
         (*valor_aumentar)++;
     }
@@ -83,32 +97,48 @@ void lista_aumentar_izquierda(Lista* lista) {
 void lista_eliminar_derecha(Lista* lista) {
     // Como en mi utilizacion de la interfaz GList siempre voy
     // a llamar esta funcion con listas no vacias puedo obviar el retorno.
-    int _retorno = glist_eliminar_final(lista);
+    glist_eliminar_final(lista->glist);
 }
 
 void lista_eliminar_izquierda(Lista* lista) {
     // Idem lista_eliminar_derecha
-    int _retorno = glist_eliminar_inicio(lista);
+    glist_eliminar_inicio(lista->glist);
 }
 
 void destruir_lista(Lista* lista) {
-    glist_destruir(lista);
+    glist_destruir(lista->glist);
+    free(lista);
+}
+
+int lista_vacia(Lista* lista) {
+    if (lista->glist->head == NULL)
+        return 1;
+    return 0;
+}
+
+unsigned int lista_longitud(Lista* lista) {
+    return lista->glist->longitud;
+}
+
+unsigned int primer_elemento(Lista* lista) {
+    unsigned int* primero = (unsigned int*)glist_primero(lista->glist);
+    return *primero;
+}
+
+unsigned int ultimo_elemento(Lista* lista) {
+    unsigned int* ultimo = (unsigned int*)glist_ultimo(lista->glist);
+    return *ultimo;
 }
 
 Lista* copiar_lista(const Lista* lista) {
-    return glist_copiar(lista);
+    Lista* copia = malloc(sizeof(Lista));
+    assert(copia != NULL);
+    copia->glist = glist_copiar(lista->glist);
+    return copia;
 }
 
 void visitar_lista(const Lista* lista) {
-    glist_imprimir(lista);
-}
-
-static Lista* lista_crear() {
-    Lista* lista = glist_crear((FuncionComparadora)cmp_int,
-                                (FuncionDestructora)destruir_int,
-                                (FuncionVisitante)visitar_int,
-                                (FuncionCopia)copiar_int);
-    return lista;
+    glist_imprimir(lista->glist);
 }
 
 int definir_lista(char* nombre, void* lista, Declaraciones declaraciones) {

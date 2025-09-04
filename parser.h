@@ -20,7 +20,7 @@ typedef enum {
  * Dado que todas menos 1 instruccion (search) se componen de una parte izquierda y una
  * parte derecha (defl izq der | deff izq der | apply izq der) puedo generalizarlo y guardar
  * dichos valores siempre aca. La parte izquierda siempre será un char*, sin embargo por mas que
- * la parte derecha en apply tambien es una string, va ser una Lista* o Funcion* o SearchExpr*
+ * la parte derecha en apply tambien sea un char*, va ser una Lista* o Funcion* o SearchExpr*
  * en el caso de defl, deff o search, por lo que necesito que sea void*.
  * El campo in_place solo será accedido en el caso que se sepa mediante el tipo que se esta
  * trabajando con un apply.

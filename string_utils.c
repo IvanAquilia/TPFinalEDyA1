@@ -1,5 +1,4 @@
 #include "string_utils.h"
-#include "utils.h"
 #include <assert.h>
 #include <ctype.h>
 #include <stdlib.h>

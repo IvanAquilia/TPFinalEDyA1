@@ -5,9 +5,12 @@
 
 /**
  * Las listas definidas por el usuario son representadas mediante
- * listas doblemente enlazadas generales.
+ * listas de numeros naturales doblemente enlazadas, mediante la interfaz GList.
  */
-typedef GList Lista;
+typedef struct {
+    GList* glist;
+} Lista;
+
 
 /*
  */
@@ -15,11 +18,15 @@ Lista* strlist_to_lista(char* cadena);
 
 /*
  */
-void lista_insertar_natural_derecha(Lista* lista, int natural);
+Lista* lista_crear();
 
 /*
  */
-void lista_insertar_natural_izquierda(Lista* lista, int natural);
+void lista_insertar_numero_derecha(Lista* lista, unsigned int natural);
+
+/*
+ */
+void lista_insertar_numero_izquierda(Lista* lista, unsigned int natural);
 
 /*
  */
@@ -41,6 +48,22 @@ void lista_eliminar_izquierda(Lista* lista);
  * Necesitada al destruir una Declaracion
  */
 void destruir_lista(Lista* lista);
+
+/*
+ */
+int lista_vacia(Lista* lista);
+
+/*
+ */
+unsigned int lista_longitud(Lista* lista);
+
+/*
+ */
+unsigned int primer_elemento(Lista* lista);
+
+/*
+ */
+unsigned int ultimo_elemento(Lista* lista);
 
 /*
  * Necesitada al copiar una Declaracion

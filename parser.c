@@ -33,7 +33,7 @@ ResultadoParser parser_analizar(const char* input, Declaraciones declaraciones) 
     size_t len = strlen(cursor);
 
     if (len != 0 && cursor[len-1] == ';') {
-        cursor[len-1] = '\0';             // Elimino el '; '
+        cursor[len-1] = '\0';  // Elimino el '; '
 
         if (strcmp(cursor, "exit") == 0) {
             r.tipo = OP_EXIT;
@@ -80,24 +80,26 @@ ResultadoParser parser_analizar(const char* input, Declaraciones declaraciones) 
             }
         }
     }
-
     free(buffer);
     return r;
 }
 
 static char* obtener_cadena_pre_igual(char** cursor) {
     *cursor += 5;
-    avanzar_hasta_noespacio(cursor);
-    if (**cursor) {
-        char* cadena_pre_igual = *cursor;
-        char* igual = strchr(*cursor, '=');
-        if (igual) {
-            *igual = '\0';
-            cadena_pre_igual = str_trim(cadena_pre_igual);
-            if (formato_alfanumerico(cadena_pre_igual)) {
-                *cursor = igual + 1;
-                avanzar_hasta_noespacio(cursor);
-                return cadena_pre_igual;
+
+    if (**cursor != '=') {  // No se permite al nombre empezar con '='
+        avanzar_hasta_noespacio(cursor);
+        if (**cursor) {
+            char* cadena_pre_igual = *cursor;
+            char* igual = strchr(*cursor, '=');
+            if (igual) {
+                *igual = '\0';
+                cadena_pre_igual = str_trim(cadena_pre_igual);
+                if (formato_alfanumerico(cadena_pre_igual)) {
+                    *cursor = igual + 1;
+                    avanzar_hasta_noespacio(cursor);
+                    return cadena_pre_igual;
+                }
             }
         }
     }
@@ -157,7 +159,8 @@ int verificar_lista(char* lista_str) {
                 while (isdigit(*cursor)) cursor++;
             else
                 valida = 0;
-            if (cursor != corchete_final && valida)  //  Si no era el ultimo numero valido...
+
+            if (cursor != corchete_final && valida) { //  Si no era el ultimo numero valido...
                 if (*cursor == ',' ) {
                     if (*(cursor + 1) == ' ' && isdigit(*(cursor + 2))) // Caso: [1, 2...]
                         cursor += 2;
@@ -168,6 +171,7 @@ int verificar_lista(char* lista_str) {
                 } else {
                     valida = 0;
                 }
+            }
         }
     } else {
         valida = 0;

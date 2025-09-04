@@ -1,5 +1,6 @@
 #ifndef GLIST_H
 #define GLIST_H
+#include "utils.h"
 
 // ------------------ Funciones genéricas usadas en la interfaz ------------------
 typedef int (*FuncionComparadora)(const void* a, const void* b);
@@ -17,7 +18,7 @@ typedef struct _Nodo {
 typedef struct {
     Nodo* head;
     Nodo* tail;
-    int longitud;
+    unsigned int longitud;
     FuncionComparadora cmp;
     FuncionDestructora destruir;
     FuncionVisitante visitar;
@@ -68,10 +69,6 @@ void* glist_primero(GList* lista);
  * Obtener último elemento (o NULL si está vacía)
  */
 void* glist_ultimo(GList* lista);
-
-/*
- */
-int lista_vacia(GList* lista);
 
 /*
  * Buscar un elemento (usa la funcion comparadora)

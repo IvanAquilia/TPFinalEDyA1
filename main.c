@@ -1,5 +1,4 @@
 #include "parser.h"
-#include "glist.h"
 #include "listas.h"
 #include "funciones.h"
 #include "hash.h"
@@ -27,20 +26,20 @@ int main(void) {
                 char* id_lista = r.parte_izquierda;
                 void* def_lista = r.parte_derecha;
                 guardada = definir_lista(id_lista, def_lista, declaraciones);
-                if (!guardada)
-                    printf("ERROR: ya existe un elemento con el nombre '%s' en el programa\n", id_lista);
-                else
+                if (guardada)
                     printf("Lista '%s' definida con exito\n", id_lista);
+                else
+                    printf("ERROR: ya existe un elemento con el nombre '%s' en el programa\n", id_lista);
 
                 break;
             case OP_DEFF:
                 char* id_funcion = r.parte_izquierda;
                 void* def_funcion = r.parte_derecha;
                 guardada = definir_funcion(id_funcion, def_funcion, declaraciones);
-                if (!guardada)
-                    printf("ERROR: ya existe un elemento con el nombre '%s' en el programa\n", id_funcion);
-                else
+                if (guardada)
                     printf("Funcion '%s' definida con exito\n", id_funcion);
+                else
+                    printf("ERROR: ya existe un elemento con el nombre '%s' en el programa\n", id_funcion);
 
                 break;
             case OP_APPLY:
@@ -53,17 +52,23 @@ int main(void) {
                                                         string_lista,
                                                         in_place,
                                                         declaraciones);
-                if (!obtenidas) {
+                if (obtenidas) {
+                    int status = aplicar_funcion(funcion, lista, declaraciones);
+                    if (status < 0)
+                        printf("ERROR: se ha alcanzado el limite de memoria/tiempo para realizar el calculo.\n");
+                    else if (status > 0)
+                        printf("ERROR: operacion ilegal.\n");
+                } else {
                     if (!funcion)
                         printf("ERROR: no existe la funcion de nombre '%s'\n", nombre_funcion);
-                    if (!lista)
+                    if (!lista) {
                         if (!in_place)
                             printf("ERROR: no existe la lista de nombre '%s'\n", string_lista);
                         else
                             printf("ERROR: lista literal mal formada: '%s'\n", string_lista);
-                } else {
-                    aplicar_funcion(funcion, lista, declaraciones);
+                    }
                 }
+
                 if (lista && in_place)
                     destruir_lista(lista); // Destruyo la lista dummy temporal creada para el in-place apply
 

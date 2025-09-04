@@ -31,10 +31,10 @@ void visitar_str(const char* dato);
 /*
  * Utils enteros
  */
-int cmp_int(const int* a, const int* b);
-void destruir_int(int* dato);
-int* copiar_int(const int* dato);
-void visitar_int(const int* dato);
+int cmp_uint(const unsigned int* a, const unsigned int* b);
+void destruir_uint(unsigned int* dato);
+unsigned int* copiar_uint(const unsigned int* dato);
+void visitar_uint(const unsigned int* dato);
 
 /*
  * Utils declaracion/declaraciones
@@ -51,5 +51,6 @@ Declaraciones declaraciones_crear();
  */
 void* obtener_def_usuario(Declaraciones declaraciones, const void* clave, TipoDeclaracion tipo);
 int generar_funciones_base(Declaraciones declaraciones);
-
+int es_primo(unsigned int n);
+unsigned int siguiente_primo(unsigned int n);
 #endif
