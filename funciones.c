@@ -159,20 +159,17 @@ static int aplicar_funcion_interno(Funcion* funcion, Lista* lista, int acc_overf
 
     for (unsigned int i = 0; i < cantidad && status == 0 && acc_overflow < MAX_OPERACIONES; i++, acc_overflow++) {
         char* f = funcion_iesima(funcion, i);
-        /* Chequeo si es factible comenzar la repetición.
-           No hace faltar preguntar si el largo es mayor o igual a 2, con esa pregunta ya abarco ese caso.
-           Si la lista fuera de tamaño 1 o menor, primer_elemento == ultimo_elemento
-           y no haria la repeticion de todos modos */
+        /* Chequeo si es factible comenzar la repetición sino la salteo */
            // Meter en doc capaz.
         if (strcmp(f, "<") == 0)
-            if (primer_elemento(lista) != ultimo_elemento(lista))
+            if (lista_longitud(lista) && primer_elemento(lista) != ultimo_elemento(lista))
                 pila_push(pila_repeticiones, i);
             else
                 i = saltear_repeticion(funcion, i);
         else if (strcmp(f, ">") == 0)
             // Vuelvo a chequear si es factible, si no lo es, hago pop y sigo de largo, asi no tengo
             // el costo lineal de saltear_repeticion() hasta este '>' en el caso que ya no haga falta repetir.
-            if (primer_elemento(lista) != ultimo_elemento(lista)) {
+            if (lista_longitud(lista) && primer_elemento(lista) != ultimo_elemento(lista)) {
                 unsigned int* pos_apertura_rep = pila_top(pila_repeticiones);
                 i = *pos_apertura_rep;
             }

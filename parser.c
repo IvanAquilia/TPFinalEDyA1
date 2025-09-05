@@ -7,6 +7,8 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "search.h"
+
 /*
  * Avanza puntero hasta el comienzo de lo que se encuentre luego del signo igual, omitiendo todos los espacios
  * en el medio, luego devuelve dicha string encontrada previa al signo igual, si fue posible.
@@ -14,9 +16,10 @@
 static char* obtener_cadena_pre_igual(char** cursor);
 static char* obtener_nombre_funcion(char** cursor);
 static int verificar_funcion(char* funcion_str);
+static int verificar_search(char* cursor);
 static int identificador_invalido(char caracter);
 static int repeticion_vacia(char caracter_1, char caracter_2);
-static void terminar_parseo(ResultadoParser* r, char* izq, void* der, int in_place, TipoOperacion tipo);
+static void terminar_parseo(ResultadoParser* r, char* izq, void* der, int in_place, TipoRespuestaParser tipo);
 
 ResultadoParser parser_analizar(const char* input, Declaraciones declaraciones) {
     ResultadoParser r;
@@ -78,8 +81,20 @@ ResultadoParser parser_analizar(const char* input, Declaraciones declaraciones) 
                 int in_place = *nombre_lista == '[' ? 1 : 0; // Puede tratarse de una lista in-place
                 terminar_parseo(&r, nombre_funcion, nombre_lista, in_place, OP_APPLY);
             }
+        } else if (strncmp(cursor, "search ", 7) == 0) {
+            int valida = verificar_search(cursor);
+            printf("%d\n", valida);
+            if (valida) {
+                SearchExpr* search = strsearch_to_search(cursor, declaraciones);
+                if (search != NULL) {
+                    terminar_parseo(&r, NULL, search, 0, OP_SEARCH);
+                } else {
+                    r.tipo = SEARCH_INVALIDO;
+                }
+            }
         }
     }
+
     free(buffer);
     return r;
 }
@@ -121,6 +136,40 @@ static char* obtener_nombre_funcion(char** cursor) {
     }
 
     return NULL;
+}
+
+static int verificar_search(char* cursor) {
+    cursor += 7;
+    avanzar_hasta_noespacio(&cursor);
+    char* fin_search = strchr(cursor, '}');
+    int valida = 1;
+    char ultimo = ';'; // Arranco esperando una ','
+    if (*cursor && *cursor == '{' && fin_search) {
+        cursor++;
+        avanzar_hasta_noespacio(&cursor);
+        if (cursor != fin_search) {
+            while (*cursor != *fin_search && valida) {
+                if (isalnum(*cursor))
+                    while (isalnum(*cursor)) cursor++;
+                else
+                    valida = 0;
+
+                if ((ultimo == ',' && *cursor == ';') || (ultimo == ';' && *cursor == ',')) {
+                    cursor++;
+                    avanzar_hasta_noespacio(&cursor);
+                    ultimo = ultimo == ';' ? ',' : ';';
+                } else {
+                    valida = 0;
+                }
+            }
+        } else {
+            valida = 0;
+        }
+    } else {
+        valida = 0;
+    }
+
+    return valida;
 }
 
 static int verificar_funcion(char* funcion_str) {
@@ -191,26 +240,17 @@ static int repeticion_vacia(char caracter_1, char caracter_2) {
     return 0;
 }
 
-static void terminar_parseo(ResultadoParser* r, char* izq, void* der, int in_place, TipoOperacion tipo) {
-    if (tipo == OP_DEFF || tipo == OP_DEFL) {
-        char* nombre_funcion_o_lista = izq;
-        void* funcion_o_lista = der;
-        r->parte_izquierda = nombre_funcion_o_lista;
-        r->parte_derecha = funcion_o_lista;
-        r->in_place = in_place;  // in_place = 0
-        r->tipo = tipo;
-    } else if (tipo == OP_APPLY) {
-        // Los apply son el unico caso que tanto la parte izquierda como derecha de
-        // la instruccion son strings (nombre funcion a aplicar | nombre lista a ser aplicada)
-        char* nombre_funcion = izq;
-        void* nombre_lista = der;
-        r->parte_izquierda = nombre_funcion;
-        r->parte_derecha = nombre_lista; // Se guarda como void* pero internamente puedo luego
-                                         // saber gracias al tipo OP_APPLY que en verdad apunta
-                                         // a un char* duplicado por str_dup en el parser
-        r->in_place = in_place;
-        r->tipo = tipo;
-    }
+static void terminar_parseo(ResultadoParser* r, char* izq, void* der, int in_place, TipoRespuestaParser tipo) {
+    // Los apply son el unico caso que tanto la parte izquierda como derecha de
+    // la instruccion son strings (nombre de funcion a aplicar | nombre de lista a ser aplicada), se guarda
+    // como void* pero internamente puedo luego saber gracias al tipo OP_APPLY que en verdad apunta
+    // a un char* duplicado por str_dup en el parser.
+
+    // En los search, la parte izquierda de char* será NULL, ya que no la hay.
+    r->parte_izquierda = izq;
+    r->parte_derecha = der;
+    r->in_place = in_place;
+    r->tipo = tipo;
 }
 
 void parser_liberar(ResultadoParser* r) {
@@ -224,6 +264,8 @@ void parser_liberar(ResultadoParser* r) {
     if (r->tipo == OP_APPLY) {
         free(r->parte_izquierda);
         free(r->parte_derecha);
+    } else if (r->tipo == OP_SEARCH) {
+        destruir_search_expr((SearchExpr*)r->parte_derecha);
     } else {
         free(r->parte_izquierda);
         if (r->tipo == OP_DEFL) {

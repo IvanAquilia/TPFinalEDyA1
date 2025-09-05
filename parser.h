@@ -12,8 +12,9 @@ typedef enum {
     OP_SEARCH,
     OP_EXIT,
     OVERFLOW_LISTA,
-    FUNCION_INEXISTENTE
-} TipoOperacion;
+    FUNCION_INEXISTENTE,
+    SEARCH_INVALIDO,
+} TipoRespuestaParser;
 
 /*
  * Estructura que representa cualquier tipo de respuesta emitida por el parser.
@@ -31,7 +32,7 @@ typedef struct {
     char* parte_izquierda;
     void* parte_derecha;
     int in_place;
-    TipoOperacion tipo;
+    TipoRespuestaParser tipo;
 } ResultadoParser;
 
 /**

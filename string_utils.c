@@ -24,6 +24,11 @@ void avanzar_hasta_espacio_o_repeticion(char** cursor) {
         (*cursor)++;
 }
 
+void avanzar_hasta_pcoma(char** cursor) {
+    while (**cursor && **cursor != ',' && **cursor != ';')
+        (*cursor)++;
+}
+
 void avanzar_hasta_nodigito(char** cursor) {
     while (isdigit((unsigned char)**cursor))
         (*cursor)++;

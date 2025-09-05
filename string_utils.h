@@ -14,6 +14,11 @@ void avanzar_hasta_noespacio(char** cursor);
  */
 void avanzar_hasta_espacio_o_repeticion(char** cursor);
 
+
+/*
+ */
+void avanzar_hasta_pcoma(char** cursor);
+
 /*
  */
 void avanzar_hasta_nodigito(char** cursor);

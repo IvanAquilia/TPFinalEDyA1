@@ -5,6 +5,8 @@
 #include "utils.h"
 #include <stdio.h>
 
+#include "search.h"
+
 int main(void) {
     Declaraciones declaraciones = declaraciones_crear();
     if (!generar_funciones_base(declaraciones)) {
@@ -74,6 +76,8 @@ int main(void) {
 
                 break;
             case OP_SEARCH:
+                void* def_search = r.parte_derecha;
+                visitar_search(def_search);
                 printf("Buscar transformaciones\n");
                 break;
             case OP_INVALIDA:
@@ -84,6 +88,9 @@ int main(void) {
                 break;
             case FUNCION_INEXISTENTE:
                 printf("ERROR: solo se pueden componer funciones previamente existentes en el programa.\n");
+                break;
+            case SEARCH_INVALIDO:
+                printf("ERROR: las sentencias de search solo pueden poseer pares de listas existentes en el programa.\n");
                 break;
             case OP_EXIT:
                 en_funcionamiento = 0;

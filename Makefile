@@ -1,7 +1,7 @@
 FLAGS = -Wall -Wextra -Werror -O2 -std=c99 -lm
 CC = gcc
 
-programa: main.o parser.o listas.o funciones.o utils.o string_utils.o glist.o listas.o hash.o garray.o pila.o
+programa: main.o parser.o listas.o funciones.o search.o utils.o string_utils.o glist.o listas.o hash.o garray.o pila.o
 	$(CC) -o $@ $^ $(FLAGS)
 
 main.o: glist.h parser.h listas.h
@@ -11,6 +11,8 @@ parser.o: parser.h utils.h
 listas.o: listas.h utils.h
 
 funciones.o: funciones.h
+
+search.o: search.h string_utils.h
 
 pila.o: pila.h
 

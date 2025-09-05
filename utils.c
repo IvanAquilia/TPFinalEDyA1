@@ -118,7 +118,7 @@ Declaraciones declaraciones_crear() {
 // ----------- AUXILIARES/VARIAS
 
 void* obtener_def_usuario(Declaraciones declaraciones, const void* clave, TipoDeclaracion tipo) {
-    Declaracion* declaracion = (Declaracion*)tabla_hash_buscar(declaraciones, clave);
+    Declaracion* declaracion = tabla_hash_buscar(declaraciones, clave);
     if (declaracion && declaracion->tipo == tipo)
         return declaracion->valor;
     return NULL;
