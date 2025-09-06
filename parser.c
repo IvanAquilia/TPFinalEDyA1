@@ -83,7 +83,6 @@ ResultadoParser parser_analizar(const char* input, Declaraciones declaraciones) 
             }
         } else if (strncmp(cursor, "search ", 7) == 0) {
             int valida = verificar_search(cursor);
-            printf("%d\n", valida);
             if (valida) {
                 SearchExpr* search = strsearch_to_search(cursor, declaraciones);
                 if (search != NULL) {

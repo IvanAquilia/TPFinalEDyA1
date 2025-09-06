@@ -63,10 +63,15 @@ Lista* strlist_to_lista(char* cadena) {
 Lista* lista_crear() {
     Lista* lista = malloc(sizeof(Lista));
     assert(lista != NULL);
+    char* tipo = malloc(sizeof(char) * 5);
+    assert(tipo != NULL);
+    strcpy(tipo, "uint");
     lista->glist = glist_crear((FuncionComparadora)cmp_uint,
                                 (FuncionDestructora)destruir_uint,
                                 (FuncionVisitante)visitar_uint,
-                                (FuncionCopia)copiar_uint);
+                                (FuncionCopia)copiar_uint,
+                                tipo);
+    free(tipo);
     return lista;
 }
 
@@ -120,14 +125,14 @@ unsigned int lista_longitud(Lista* lista) {
     return lista->glist->longitud;
 }
 
-unsigned int primer_elemento(Lista* lista) {
+unsigned int* primer_elemento(Lista* lista) {
     unsigned int* primero = (unsigned int*)glist_primero(lista->glist);
-    return *primero;
+    return primero;
 }
 
-unsigned int ultimo_elemento(Lista* lista) {
+unsigned int* ultimo_elemento(Lista* lista) {
     unsigned int* ultimo = (unsigned int*)glist_ultimo(lista->glist);
-    return *ultimo;
+    return ultimo;
 }
 
 Lista* copiar_lista(const Lista* lista) {
@@ -137,8 +142,14 @@ Lista* copiar_lista(const Lista* lista) {
     return copia;
 }
 
+int listas_iguales(Lista* lista1, Lista* lista2) {
+    return glist_iguales(lista1->glist, lista2->glist);
+}
+
 void visitar_lista(const Lista* lista) {
+    printf("[");
     glist_imprimir(lista->glist);
+    printf("]\n");
 }
 
 int definir_lista(char* nombre, void* lista, Declaraciones declaraciones) {

@@ -2,12 +2,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
+
+#include "string_utils.h"
 
 // ------------------ Crear / Destruir ------------------
 GList* glist_crear(FuncionComparadora cmp,
                    FuncionDestructora destruir,
                    FuncionVisitante visitar,
-                   FuncionCopia copiar) {
+                   FuncionCopia copiar,
+                   char* tipo) {
     GList* lista = malloc(sizeof(GList));
     assert(lista != NULL);
     assert(cmp != NULL);
@@ -22,6 +26,7 @@ GList* glist_crear(FuncionComparadora cmp,
     lista->destruir = destruir;
     lista->visitar = visitar;
     lista->copiar = copiar;
+    lista->tipo = str_dup(tipo);
     return lista;
 }
 
@@ -34,6 +39,7 @@ void glist_destruir(GList* lista) {
 
         free(temp);
     }
+    free(lista->tipo);
     free(lista);
 }
 
@@ -144,6 +150,8 @@ void glist_imprimir(const GList* lista) {
     while (actual != NULL) {
         lista->visitar(actual->dato);
         actual = actual->sig;
+        if (actual != NULL)
+            printf(", ");
     }
 }
 
@@ -151,7 +159,8 @@ GList* glist_copiar(const GList* original) {
     GList* copia = glist_crear(original->cmp,
                                original->destruir,
                                original->visitar,
-                               original->copiar);
+                               original->copiar,
+                               original->tipo);
 
     Nodo* actual = original->head;
     while (actual != NULL) {
@@ -159,4 +168,22 @@ GList* glist_copiar(const GList* original) {
         actual = actual->sig;
     }
     return copia;
+}
+
+int glist_iguales(GList* lista1, GList* lista2) {
+    int iguales = 1;
+    if (lista1->longitud == lista2->longitud && strcmp(lista1->tipo, lista2->tipo) == 0) {
+        Nodo* actual_l1 = lista1->head;
+        Nodo* actual_l2 = lista2->head;
+        while (actual_l1 != NULL && actual_l2 != NULL && iguales) {
+            if (lista1->cmp(actual_l1->dato, actual_l2->dato) != 0)
+                iguales = 0;
+            actual_l1 = actual_l1->sig;
+            actual_l2 = actual_l2->sig;
+        }
+    } else {
+        iguales = 0;
+    }
+
+    return iguales;
 }

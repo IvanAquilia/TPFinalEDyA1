@@ -11,7 +11,9 @@
 
 
 #define LARGO_FUNCIONES 200
-#define MAX_OPERACIONES 33554432 // 2^25
+#define MAX_OPERACIONES 33554432 // 2^25 aplicaciones de funciones (una base,
+                                 // comenzar/termianar repeticiones, aplicar una custom) por apply
+#define MAX_MEMORIA 100000 // 100.000 llamadas recursivas maximo por apply.
 
 
 /*
@@ -19,8 +21,10 @@
  * hasta el '>' en el caso de no tener que repetir mas, es un gran ahorro de tiempo
  * en frente del costo marginal de tener que preguntar 2 veces lo mismo innecesariamente
  */
-static int aplicar_funcion_interno(Funcion* funcion, Lista* lista, int acc_overflow, Declaraciones declaraciones);
-static int aplicar_base_o_rebuscar(char* nombre_funcion, Lista* lista, int acc_overflow, Declaraciones declaraciones);
+static int aplicar_funcion_interno(Funcion* funcion, Lista* lista, int* acc_operaciones,
+                                    int* acc_memoria, Declaraciones declaraciones);
+static int aplicar_base_o_rebuscar(char* nombre_funcion, Lista* lista, int* acc_operaciones,
+                                    int* acc_memoria, Declaraciones declaraciones);
 static unsigned int saltear_repeticion(Funcion* funcion, unsigned int i);
 static TipoFuncion str_a_tipo(char* nombre_funcion);
 
@@ -81,6 +85,27 @@ Funcion* funcion_crear() {
     return funcion;
 }
 
+FuncionesAll* obtener_todas_funciones_declaradas(Declaraciones declaraciones) {
+    FuncionesAll* funciones_all = malloc(sizeof(FuncionesAll));
+    assert(funciones_all != NULL);
+    funciones_all->garray = garray_crear(declaraciones->elementos,
+                                        (FuncionComparadora)comparar_funcion,
+                                        (FuncionDestructora)destruir_funcion,
+                                        (FuncionVisitante)visitar_funcion,
+                                        (FuncionCopia)copiar_funcion);
+
+    for (unsigned int i = 0; i < declaraciones->capacidad; i++) {
+        if (declaraciones->buckets[i] != NULL) {
+            Declaracion* declaracion = declaraciones->buckets[i]->dato;
+            if (declaracion->tipo == FUNCION) {
+                garray_insertar(funciones_all->garray, declaracion->valor);
+            }
+        }
+    }
+
+    return funciones_all;
+}
+
 
 void componer_funcion(Funcion* funcion, char* nombre) {
     garray_insertar(funcion->garray, nombre);
@@ -89,6 +114,11 @@ void componer_funcion(Funcion* funcion, char* nombre) {
 void destruir_funcion(Funcion* funcion) {
     garray_destruir(funcion->garray);
     free(funcion);
+}
+
+void destruir_arreglo_aux_funciones(FuncionesAll* funciones_todas) {
+    garray_destruir(funciones_todas->garray);
+    free(funciones_todas);
 }
 
 Funcion* copiar_funcion(const Funcion* funcion) {
@@ -102,12 +132,35 @@ void visitar_funcion(const Funcion* funcion) {
     garray_imprimir(funcion->garray);
 }
 
+int comparar_funcion(const Funcion* funcion1, const Funcion* funcion2) {
+    int iguales = 1;
+    if (cantidad_composiciones(funcion1) == cantidad_composiciones(funcion2)) {
+        for (unsigned int i = 0; i < cantidad_composiciones(funcion1) && iguales; i++) {
+            char* funcion_i_1 = funcion_iesima(funcion1, i);
+            char* funcion_i_2 = funcion_iesima(funcion2, i);
+            if (strcmp(funcion_i_1, funcion_i_2) != 0) {
+                iguales = 0;
+            }
+        }
+    }
+
+    return iguales;
+}
+
 unsigned int cantidad_composiciones(const Funcion* funcion) {
     return funcion->garray->tamaño_actual;
 }
 
-char* funcion_iesima(Funcion* funcion, unsigned int i) {
+unsigned int cantidad_funciones_totales(const FuncionesAll* funciones) {
+    return funciones->garray->tamaño_actual;
+}
+
+char* funcion_iesima(const Funcion* funcion, unsigned int i) {
     return (char*)funcion->garray->elementos[i];
+}
+
+Funcion* funcion_definida_iesima(const FuncionesAll* funciones, unsigned int i) {
+    return (Funcion*)funciones->garray->elementos[i];
 }
 
 int definir_funcion(char* nombre, void* funcion, Declaraciones declaraciones) {
@@ -136,56 +189,68 @@ int obtener_funcion_y_lista(Funcion** funcion, Lista** lista,
     return 0;
 }
 
-int aplicar_funcion(Funcion* funcion, Lista* lista, Declaraciones declaraciones) {
+ResultadoApply aplicar_funcion(Funcion* funcion, Lista* lista, Declaraciones declaraciones) {
     Lista* list_temp = copiar_lista(lista);
-    int status = aplicar_funcion_interno(funcion, list_temp, 0, declaraciones);
+    int* acc_operaciones = malloc(sizeof(int));
+    int* acc_memoria = malloc(sizeof(int));
+    *acc_operaciones = 0;
+    *acc_memoria = 0;
+    int status = aplicar_funcion_interno(funcion, list_temp, acc_operaciones, acc_memoria, declaraciones);
 
-    if (status == 0) {
-        printf("[ ");
-        visitar_lista(list_temp);
-        printf("]");
-        printf("\n");
-    }
+    ResultadoApply resultado;
+    resultado.status = status;
+    resultado.lista_resultado = list_temp;
 
-    destruir_lista(list_temp);
-    return status;
+    free(acc_operaciones);
+    free(acc_memoria);
+    return resultado;
 }
 
 // 0 si bien, 1 si hubo error de aplicacion (eliminacion o sucesor a [] / repeticion a largo <2), -1 si hubo overflow
-static int aplicar_funcion_interno(Funcion* funcion, Lista* lista, int acc_overflow, Declaraciones declaraciones) {
-    Pila* pila_repeticiones = pila_crear();
-    unsigned int cantidad = cantidad_composiciones(funcion);
+static int aplicar_funcion_interno(Funcion* funcion, Lista* lista, int* acc_operaciones,
+                                    int* acc_memoria, Declaraciones declaraciones) {
+    Pila* pila_repeticiones = pila_crear((FuncionComparadora)cmp_uint,
+                                        (FuncionDestructora)destruir_uint,
+                                        (FuncionVisitante)visitar_uint,
+                                        (FuncionCopia)copiar_uint,
+                                        "uint");
+
+    unsigned int cantidad = cantidad_composiciones(funcion), i = 0;
     int status = 0;
 
-    for (unsigned int i = 0; i < cantidad && status == 0 && acc_overflow < MAX_OPERACIONES; i++, acc_overflow++) {
+    while (i < cantidad && status == 0 && *acc_operaciones < MAX_OPERACIONES && *acc_memoria < MAX_MEMORIA) {
         char* f = funcion_iesima(funcion, i);
-        /* Chequeo si es factible comenzar la repetición sino la salteo */
-           // Meter en doc capaz.
         if (strcmp(f, "<") == 0)
-            if (lista_longitud(lista) && primer_elemento(lista) != ultimo_elemento(lista))
-                pila_push(pila_repeticiones, i);
+            /* Chequeo si es factible comenzar la repetición sino la salteo, primer/ultimo elemento nunca
+             * devolveria NULL por la condicion previa de lista_longitud, es seguro desreferenciar*/
+            if (lista_longitud(lista) && *primer_elemento(lista) != *ultimo_elemento(lista))
+                pila_push(pila_repeticiones, &i);
             else
                 i = saltear_repeticion(funcion, i);
         else if (strcmp(f, ">") == 0)
-            // Vuelvo a chequear si es factible, si no lo es, hago pop y sigo de largo, asi no tengo
-            // el costo lineal de saltear_repeticion() hasta este '>' en el caso que ya no haga falta repetir.
-            if (lista_longitud(lista) && primer_elemento(lista) != ultimo_elemento(lista)) {
+            /* Vuelvo a chequear si es factible, si no lo es, hago pop y sigo de largo, asi no tengo
+             * el costo lineal de saltear_repeticion() hasta este '>' en el caso que ya no haga falta repetir. */
+            if (lista_longitud(lista) && *primer_elemento(lista) != *ultimo_elemento(lista)) {
                 unsigned int* pos_apertura_rep = pila_top(pila_repeticiones);
                 i = *pos_apertura_rep;
             }
             else
                 pila_pop(pila_repeticiones);
         else
-            status = aplicar_base_o_rebuscar(f, lista, acc_overflow, declaraciones);
+            status = aplicar_base_o_rebuscar(f, lista, acc_operaciones, acc_memoria, declaraciones);
+
+        i++;
+        *acc_operaciones += 1;
     }
 
     pila_destruir(pila_repeticiones);
-    if (acc_overflow == MAX_OPERACIONES)
+    if (*acc_operaciones == MAX_OPERACIONES || *acc_memoria == MAX_MEMORIA)
         status = -1;
     return status;
 }
 
-static int aplicar_base_o_rebuscar(char* nombre_funcion, Lista* lista, int acc_overflow, Declaraciones declaraciones) {
+static int aplicar_base_o_rebuscar(char* nombre_funcion, Lista* lista, int* acc_operaciones,
+                                    int* acc_memoria, Declaraciones declaraciones) {
     TipoFuncion tipo = str_a_tipo(nombre_funcion);
     int valido = 0;
 
@@ -223,7 +288,8 @@ static int aplicar_base_o_rebuscar(char* nombre_funcion, Lista* lista, int acc_o
         case Custom:
             /* Busco la funcion custom y re-aplico el mismo proceso recursivamente */
             Funcion* funcion = obtener_def_usuario(declaraciones, nombre_funcion, FUNCION);
-            return aplicar_funcion_interno(funcion, lista, acc_overflow + 1, declaraciones);
+            *acc_memoria += 1;
+            return aplicar_funcion_interno(funcion, lista, acc_operaciones, acc_memoria, declaraciones);
     }
     return valido;
 }

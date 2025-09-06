@@ -59,16 +59,20 @@ unsigned int lista_longitud(Lista* lista);
 
 /*
  */
-unsigned int primer_elemento(Lista* lista);
+unsigned int* primer_elemento(Lista* lista);
 
 /*
  */
-unsigned int ultimo_elemento(Lista* lista);
+unsigned int* ultimo_elemento(Lista* lista);
 
 /*
  * Necesitada al copiar una Declaracion
  */
 Lista* copiar_lista(const Lista* lista);
+
+/*
+ */
+int listas_iguales(Lista* lista1, Lista* lista2);
 
 /*
  * Necesitada al visitar una Declaracion

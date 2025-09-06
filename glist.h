@@ -23,6 +23,7 @@ typedef struct {
     FuncionDestructora destruir;
     FuncionVisitante visitar;
     FuncionCopia copiar;
+    char* tipo; // Me sirve para el glist_comparar, para saber si es seguro aplicar cmp.
 } GList;
 
 // ------------------ Interfaz pública ------------------
@@ -33,7 +34,8 @@ typedef struct {
 GList* glist_crear(FuncionComparadora cmp,
                    FuncionDestructora destruir,
                    FuncionVisitante visitar,
-                   FuncionCopia copiar);
+                   FuncionCopia copiar,
+                   char* tipo);
 
 /*
  * Destruir lista (aplica la destructora a cada dato si está definida)
@@ -84,5 +86,9 @@ void glist_imprimir(const GList* lista);
  * Copiar lista (copia referencias, no clona datos)
  */
 GList* glist_copiar(const GList* original);
+
+/*
+ */
+int glist_iguales(GList* lista1, GList* lista2);
 
 #endif

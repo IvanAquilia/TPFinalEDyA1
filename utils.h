@@ -51,6 +51,7 @@ Declaraciones declaraciones_crear();
  */
 void* obtener_def_usuario(Declaraciones declaraciones, const void* clave, TipoDeclaracion tipo);
 int generar_funciones_base(Declaraciones declaraciones);
+
 int es_primo(unsigned int n);
 unsigned int siguiente_primo(unsigned int n);
 #endif

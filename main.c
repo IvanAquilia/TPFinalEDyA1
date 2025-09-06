@@ -48,18 +48,22 @@ int main(void) {
                 char* nombre_funcion = r.parte_izquierda;
                 char* string_lista = (char*)r.parte_derecha;
                 int in_place = r.in_place;
-                Funcion* funcion; Lista* lista;
-                int obtenidas = obtener_funcion_y_lista(&funcion, &lista,
-                                                        nombre_funcion,
-                                                        string_lista,
-                                                        in_place,
+                Funcion* funcion;
+                Lista* lista;
+
+                int obtenidas = obtener_funcion_y_lista(&funcion, &lista, nombre_funcion, string_lista, in_place,
                                                         declaraciones);
                 if (obtenidas) {
-                    int status = aplicar_funcion(funcion, lista, declaraciones);
-                    if (status < 0)
+                    ResultadoApply resultado = aplicar_funcion(funcion, lista, declaraciones);
+
+                    if (resultado.status == 0)
+                        visitar_lista(resultado.lista_resultado);
+                    else if (resultado.status < 0)
                         printf("ERROR: se ha alcanzado el limite de memoria/tiempo para realizar el calculo.\n");
-                    else if (status > 0)
+                    else if (resultado.status > 0)
                         printf("ERROR: operacion ilegal.\n");
+
+                    destruir_lista(resultado.lista_resultado);
                 } else {
                     if (!funcion)
                         printf("ERROR: no existe la funcion de nombre '%s'\n", nombre_funcion);
@@ -77,8 +81,17 @@ int main(void) {
                 break;
             case OP_SEARCH:
                 void* def_search = r.parte_derecha;
-                visitar_search(def_search);
-                printf("Buscar transformaciones\n");
+                Funcion* resultado_search = search(declaraciones, def_search);
+                if (resultado_search != NULL) {
+                    printf("Funcion encontrada: \n");
+                    visitar_funcion(resultado_search);
+                    printf("\n");
+
+                    destruir_funcion(resultado_search);
+                }
+                else
+                    printf("No se encontro una funcion que cumpla con el objetivo. \n");
+
                 break;
             case OP_INVALIDA:
                 printf("ERROR: Instruccion mal formada o no reconocida, intente nuevamente.\n");
@@ -97,7 +110,6 @@ int main(void) {
                 break;
         }
 
-        tabla_hash_recorrer(declaraciones);
         parser_liberar(&r); // En el caso de los DEFF y DEFL, una vez que
                             // se transformo la respuesta del
                             // parser a una Declaracion y se guardo en la tabla

@@ -8,6 +8,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "pila.h"
+
 #define CANTIDAD_DECLARACIONES 10007
 
 // -------------- Funciones de comparacion, copia... etc. pasadas a las estructuras -------------- //
@@ -52,7 +54,7 @@ unsigned int* copiar_uint(const unsigned int* natural) {
 }
 
 void visitar_uint(const unsigned int* natural) {
-    printf("%u ", *natural);
+    printf("%u", *natural);
 }
 
 // ----------- DECLARACIONES
@@ -117,6 +119,7 @@ Declaraciones declaraciones_crear() {
 
 // ----------- AUXILIARES/VARIAS
 
+// dado una key, obtiene su valor en la tabla hash, (key = nombre en declaracion)
 void* obtener_def_usuario(Declaraciones declaraciones, const void* clave, TipoDeclaracion tipo) {
     Declaracion* declaracion = tabla_hash_buscar(declaraciones, clave);
     if (declaracion && declaracion->tipo == tipo)

@@ -6,13 +6,13 @@ programa: main.o parser.o listas.o funciones.o search.o utils.o string_utils.o g
 
 main.o: glist.h parser.h listas.h
 
-parser.o: parser.h utils.h
+parser.o: parser.h
 
-listas.o: listas.h utils.h
+listas.o: listas.h
 
 funciones.o: funciones.h
 
-search.o: search.h string_utils.h
+search.o: search.h
 
 pila.o: pila.h
 
