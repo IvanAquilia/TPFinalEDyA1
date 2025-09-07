@@ -7,6 +7,10 @@
 
 #define FACTOR_CARGA_MAX 0.7
 
+/*
+ * Crea n entradas_nuevas, rehashea todos los datos de la original y los inserta en los nuevos
+ * Buckets, luego asigna estos nuevos buckets a la tabla y elimina los anteriores.
+ */
 static void tabla_hash_redimensionar(HashTable* tabla, unsigned int nueva_capacidad);
 
 // ------------------ Crear / Destruir ------------------
@@ -161,6 +165,13 @@ static void tabla_hash_redimensionar(HashTable* tabla, unsigned int nueva_capaci
         }
     }
 
+    for (unsigned int i = 0; i < tabla->capacidad; i++) {
+        if (tabla->buckets[i] != NULL) {
+            tabla->destruir(tabla->buckets[i]->dato);
+            tabla->destruir_clave(tabla->buckets[i]->clave);
+            free(tabla->buckets[i]);
+        }
+    }
     free(tabla->buckets);
     tabla->buckets = nuevos_buckets;
     tabla->capacidad = nueva_capacidad;

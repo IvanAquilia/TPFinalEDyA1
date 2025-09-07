@@ -23,7 +23,7 @@ typedef struct {
     FuncionDestructora destruir;
     FuncionVisitante visitar;
     FuncionCopia copiar;
-    char* tipo; // Me sirve para el glist_comparar, para saber si es seguro aplicar cmp.
+    char* tipo; // Me sirve para el glist_comparar, para saber si es seguro aplicar cmp entre los datos.
 } GList;
 
 // ------------------ Interfaz pública ------------------
@@ -32,13 +32,13 @@ typedef struct {
  * Crear lista vacía
  */
 GList* glist_crear(FuncionComparadora cmp,
-                   FuncionDestructora destruir,
-                   FuncionVisitante visitar,
-                   FuncionCopia copiar,
-                   char* tipo);
+    FuncionDestructora destruir,
+    FuncionVisitante visitar,
+    FuncionCopia copiar,
+    char* tipo);
 
 /*
- * Destruir lista (aplica la destructora a cada dato si está definida)
+ * Destruir lista (aplica la destructora a cada dato)
  */
 void glist_destruir(GList* lista);
 
@@ -73,21 +73,18 @@ void* glist_primero(GList* lista);
 void* glist_ultimo(GList* lista);
 
 /*
- * Buscar un elemento (usa la funcion comparadora)
- */
-void* glist_buscar(GList* lista, void* dato);
-
-/*
- * Imprimir lista (usa la funcion impresora si está definida)
+ * Imprimir lista (usa la funcion visitante)
  */
 void glist_imprimir(const GList* lista);
 
 /*
- * Copiar lista (copia referencias, no clona datos)
+ * Copiar lista (deep-copy)
  */
 GList* glist_copiar(const GList* original);
 
 /*
+ * Determina mediante la funcion comparadora, y asegurandose que los tipos contenidos sean iguales, si dos
+ * listas son iguales elemento a elemento.
  */
 int glist_iguales(GList* lista1, GList* lista2);
 

@@ -8,13 +8,12 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "pila.h"
+#define CANTIDAD_DECLARACIONES 10007 // Primo
 
-#define CANTIDAD_DECLARACIONES 10007
 
 // -------------- Funciones de comparacion, copia... etc. pasadas a las estructuras -------------- //
 
-// ----------- STRINGS
+/* ------------- STRINGS ------------- */
 int cmp_str(const char* a, const char* b) {
     return strcmp(a, b);
 }
@@ -34,7 +33,7 @@ void visitar_str(const char* dato) {
     printf("%s ", dato);
 }
 
-// ----------- NATURALES
+/* ------------- NUMEROS NATURALES ------------- */
 int cmp_uint(const unsigned int* a, const unsigned int* b) {
     if (*a < *b)
         return -1;
@@ -57,10 +56,10 @@ void visitar_uint(const unsigned int* natural) {
     printf("%u", *natural);
 }
 
-// ----------- DECLARACIONES
+/* ------------- DECLARACIONES ------------- */
 int comparar_declaracion(const Declaracion* declaracion1, const Declaracion* declaracion2) {
-    // 2 declaraciones nunca van a ser iguales mediante su nombre, la tabla hash no lo permite por diseño.
-    // Asi decimos que son iguales por el contenido.
+    /* 2 declaraciones nunca van a ser iguales mediante su nombre, la tabla hash no lo permite por diseño.
+     * Asi que decimos que son iguales por el contenido. */
     int iguales = -1;
     if (declaracion1->tipo == declaracion2->tipo) {
         if (declaracion1->tipo == FUNCION) {
@@ -87,7 +86,6 @@ void destruir_declaracion(Declaracion* declaracion) {
 }
 
 Declaracion* copiar_declaracion(const Declaracion* declaracion) {
-
     Declaracion* nueva_declaracion = malloc(sizeof(Declaracion));
     assert(nueva_declaracion != NULL);
 
@@ -118,27 +116,39 @@ void visitar_declaracion(const Declaracion* declaracion) {
 }
 
 int guardar_declaracion(Declaraciones declaraciones, Declaracion* declaracion) {
-    // Transfiero la propiedad de la Declaracion hacia la memoria que maneja la tabla hash generica
-    // internamente, genero una copia y guardo en la tabla hash la declaracion "nombre: lista/funcion".
     int guardada = tabla_hash_insertar(declaraciones, declaracion->nombre, declaracion);
     return guardada;
 }
 
 Declaraciones declaraciones_crear() {
-    Declaraciones declaraciones = tabla_hash_crear(CANTIDAD_DECLARACIONES,
-                                                    (FuncionHash)hash_clave,
-                                                    (FuncionComparadora)cmp_str,
-                                                    (FuncionDestructora)destruir_declaracion,
-                                                    (FuncionDestructora)destruir_str,
-                                                    (FuncionCopia)copiar_declaracion,
-                                                    (FuncionCopia)copiar_str,
-                                                    (FuncionVisitante)visitar_declaracion);
+    Declaraciones declaraciones = tabla_hash_crear(
+        CANTIDAD_DECLARACIONES,
+        (FuncionHash)hash_clave,
+        (FuncionComparadora)cmp_str,
+        (FuncionDestructora)destruir_declaracion,
+        (FuncionDestructora)destruir_str,
+        (FuncionCopia)copiar_declaracion,
+        (FuncionCopia)copiar_str,
+        (FuncionVisitante)visitar_declaracion);
     return declaraciones;
 }
 
-// ----------- AUXILIARES/VARIAS
+void destruir_declaraciones(Declaraciones declaraciones) {
+    tabla_hash_destruir(declaraciones);
+}
 
-// dado una key, obtiene su valor en la tabla hash, (key = nombre en declaracion)
+
+/* ------------- AUXILIARES/VARIAS ------------- */
+
+int definir(TipoDeclaracion tipo, char* nombre, void* defincion, Declaraciones declaraciones) {
+    Declaracion declaracion;
+    declaracion.nombre = nombre;
+    declaracion.valor = defincion;
+    declaracion.tipo = tipo;
+
+    return guardar_declaracion(declaraciones, &declaracion);
+}
+
 void* obtener_def_usuario(Declaraciones declaraciones, const void* clave, TipoDeclaracion tipo) {
     Declaracion* declaracion = tabla_hash_buscar(declaraciones, clave);
     if (declaracion && declaracion->tipo == tipo)
@@ -157,18 +167,10 @@ int generar_funciones_base(Declaraciones declaraciones) {
     };
     int todas_generadas = 1;
 
-    // Las funciones base son como si se hiciera un hipotetico "deff Di = Di", "deff Od = Od"... etc
-    // Guardo una string de sí misma dentro del array porque en el sistema por integridad
-    // no se permiten funciones nulas, de este modo, a la hora de aplicar una funcion,
-    // reutilizo la logica de buscar por nombre y, en el caso que
-    // no sean funciones base, llamar recursivamente.
-    // Esto permite que el usuario pueda hacer aplicaciones directas del estilo:
-    // "apply Sd L1" y reutilizar el codigo ya escrito para funciones custom.
-    // (Ver funcion aplicar_funcion() para ver en accion la naturalidad de esta decisión)
     for (int i = 0; i < 6 && todas_generadas; i++) {
         Funcion* funcion = funcion_crear();
         componer_funcion(funcion, funciones_base[i]);
-        if (!definir_funcion(funciones_base[i], funcion, declaraciones))
+        if (!definir(FUNCION, funciones_base[i], funcion, declaraciones))
             todas_generadas = 0;
         destruir_funcion(funcion); // Una vez transferida la propiedad del elemento a la
                                    // tabla hash (con un deep-copy) destruyo esta version.

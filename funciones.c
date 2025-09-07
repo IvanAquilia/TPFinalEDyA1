@@ -9,41 +9,43 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 #define LARGO_FUNCIONES 200
-#define MAX_OPERACIONES 524288 // 2^19 aplicaciones de funciones (una base,
-                                 // comenzar/termianar repeticiones, aplicar una custom) por apply
-#define MAX_MEMORIA 10000 // 10.000 llamadas recursivas maximo por apply.
-
+/* 2^19 aplicaciones de funciones (una base, comenzar/terminar repeticiones, aplicar una custom) por apply */
+#define MAX_OPERACIONES 524288
+/* 10.000 llamadas recursivas maximo por apply. */
+#define MAX_MEMORIA 10000
 
 /*
- * Chequeo tambien al cerrar repeticion para no tener que volver en O(n)
- * hasta el '>' en el caso de no tener que repetir mas, es un gran ahorro de tiempo
- * en frente del costo marginal de tener que preguntar 2 veces lo mismo innecesariamente
+ * Realiza la logica interna real de aplicar una función, devuelve 0 si pudo concretar el aplicado, 1 si hubo alguna
+ * operacion ilegal en el proceso (eliminación o sucesor a []), o -1 si excedió las constantes de max_operaciones o
+ * max_memoria.
  */
 static int aplicar_funcion_interno(Funcion* funcion, Lista* lista, int* acc_operaciones,
                                     int* acc_memoria, Declaraciones declaraciones);
+/*
+ * Dado una unica función, decide mediante su nombre si se trata de una función, si es así la aplica.
+ * Si no, busca dicha función custom y repite el proceso llamando a aplicar_funcion_interno().
+ */
 static int aplicar_base_o_rebuscar(char* nombre_funcion, Lista* lista, int* acc_operaciones,
                                     int* acc_memoria, Declaraciones declaraciones);
+/*
+ * Recibe la posición donde se encuentra el signo de abrir repetición ('<'),
+ * Devuelve la posición del '>' que cierra dicha repetición.
+ */
 static unsigned int saltear_repeticion(Funcion* funcion, unsigned int i);
 
-/*
- * Ya recibe string verificada que es una seguidilla de alpha +
- * espacios y con los < > chequeados, no hay problema
- * en modificar la original, se va a destruie luego de
- * todos modos, necesito pasarlo a lista/array
- */
-Funcion* strfunc_to_array(char* nombre, char* cadena, Declaraciones declaraciones) {
-    Funcion* funcion = funcion_crear(nombre);
+
+Funcion* strfunc_to_funcion(char* cadena, Declaraciones declaraciones) {
+    Funcion* funcion = funcion_crear();
     char* cursor = cadena;
     int funcion_inexistente = 0;
+
     while (*cursor && !funcion_inexistente) {
         avanzar_hasta_noespacio(&cursor);
 
         if (*cursor == '<' || *cursor == '>') {
-            // Tomo a los simbolos de inicio y fin de repetcion como
-            // unos "operadores" o "funciones" más. Estructuracion muy util luego a la hora
-            // de aplicar la funcion.
+            /* Tomo a los simbolos de inicio y fin de repeticion como unos "operadores" o "funciones" más.
+             * Estructuracion muy util luego a la hora de aplicar la funcion. */
             char simbolo_repeticion[2] = { *cursor, '\0' };
 
             componer_funcion(funcion, simbolo_repeticion);
@@ -54,14 +56,14 @@ Funcion* strfunc_to_array(char* nombre, char* cadena, Declaraciones declaracione
             char temp = *cursor;
             *cursor = '\0';
 
-            // Chequeo que la funcion a componer exista
+            /* Chequeo que la funcion a componer exista. */
             if (obtener_def_usuario(declaraciones, nombre, FUNCION))
                 componer_funcion(funcion, nombre);
             else
                 funcion_inexistente = 1;
 
-            // Devuelvo el valor previo a poner '\0' para no salir
-            // del while (*cursor == '\0') y moverme hasta la siguiente funcion.
+            /* Devuelvo el valor previo a poner el '\0' para tokenizar, de este modo
+             * no salgo del while (*cursor == '\0') y me muevo hasta la siguiente funciónn. */
             *cursor = temp;
         }
     }
@@ -73,14 +75,15 @@ Funcion* strfunc_to_array(char* nombre, char* cadena, Declaraciones declaracione
     return funcion;
 }
 
-Funcion* funcion_crear(char* nombre) {
+Funcion* funcion_crear() {
     Funcion* funcion = malloc(sizeof(Funcion));
     assert(funcion != NULL);
-    funcion->garray = garray_crear(LARGO_FUNCIONES,
-                                    (FuncionComparadora)cmp_str,
-                                    (FuncionDestructora)destruir_str,
-                                    (FuncionVisitante)visitar_str,
-                                    (FuncionCopia)copiar_str);
+    funcion->garray = garray_crear(
+        LARGO_FUNCIONES,
+        (FuncionComparadora)cmp_str,
+        (FuncionDestructora)destruir_str,
+        (FuncionVisitante)visitar_str,
+        (FuncionCopia)copiar_str);
 
     return funcion;
 }
@@ -88,11 +91,12 @@ Funcion* funcion_crear(char* nombre) {
 FuncionesAll* obtener_todas_funciones_declaradas(Declaraciones declaraciones) {
     FuncionesAll* funciones_all = malloc(sizeof(FuncionesAll));
     assert(funciones_all != NULL);
-    funciones_all->garray = garray_crear(declaraciones->elementos,
-                                        (FuncionComparadora)comparar_declaracion,
-                                        (FuncionDestructora)destruir_declaracion,
-                                        (FuncionVisitante)visitar_declaracion,
-                                        (FuncionCopia)copiar_declaracion);
+    funciones_all->garray = garray_crear(
+        declaraciones->elementos,
+        (FuncionComparadora)comparar_declaracion,
+        (FuncionDestructora)destruir_declaracion,
+        (FuncionVisitante)visitar_declaracion,
+        (FuncionCopia)copiar_declaracion);
 
     for (unsigned int i = 0; i < declaraciones->capacidad; i++) {
         if (declaraciones->buckets[i] != NULL) {
@@ -105,7 +109,6 @@ FuncionesAll* obtener_todas_funciones_declaradas(Declaraciones declaraciones) {
 
     return funciones_all;
 }
-
 
 void componer_funcion(Funcion* funcion, char* nombre) {
     garray_insertar(funcion->garray, nombre);
@@ -176,32 +179,22 @@ unsigned int cantidad_funciones_totales(const FuncionesAll* funciones) {
 }
 
 char* funcion_iesima(const Funcion* funcion, unsigned int i) {
-    return (char*)funcion->garray->elementos[i];
+    return (char*)garray_obtener(funcion->garray, i);
 }
 
 Declaracion* funcion_definida_iesima(const FuncionesAll* funciones, unsigned int i) {
-    return (Declaracion*)funciones->garray->elementos[i];
-}
-
-int definir_funcion(char* nombre, void* funcion, Declaraciones declaraciones) {
-    // Creo mi declaracion temporal, al salir de aca se destruye,
-    // luego se destruye tambien la funcion en el main.c
-    Declaracion declaracion;
-    declaracion.nombre = nombre;
-    declaracion.valor = (Funcion*)funcion;
-    declaracion.tipo = FUNCION;
-
-    return guardar_declaracion(declaraciones, &declaracion);
+    return (Declaracion*)garray_obtener(funciones->garray, i);
 }
 
 int obtener_funcion_y_lista(Funcion** funcion, Lista** lista,
-                            char* nombre_funcion, char* string_lista,
-                            int in_place, Declaraciones declaraciones) {
+    char* nombre_funcion, char* string_lista,
+    int in_place, Declaraciones declaraciones) {
+
     *funcion = (Funcion*)obtener_def_usuario(declaraciones, nombre_funcion, FUNCION);
 
     if (in_place && verificar_lista(string_lista))
         *lista = strlist_to_lista(string_lista);
-    else
+    else if (!in_place)
         *lista = (Lista*)obtener_def_usuario(declaraciones, string_lista, LISTA);
 
     if (*funcion && *lista)
@@ -226,14 +219,15 @@ ResultadoApply aplicar_funcion(Funcion* funcion, Lista* lista, Declaraciones dec
     return resultado;
 }
 
-// 0 si bien, 1 si hubo error de aplicacion (eliminacion o sucesor a [] / repeticion a largo <2), -1 si hubo overflow
 static int aplicar_funcion_interno(Funcion* funcion, Lista* lista, int* acc_operaciones,
-                                    int* acc_memoria, Declaraciones declaraciones) {
-    Pila* pila_repeticiones = pila_crear((FuncionComparadora)cmp_uint,
-                                        (FuncionDestructora)destruir_uint,
-                                        (FuncionVisitante)visitar_uint,
-                                        (FuncionCopia)copiar_uint,
-                                        "uint");
+    int* acc_memoria, Declaraciones declaraciones) {
+
+    Pila* pila_repeticiones = pila_crear(
+        (FuncionComparadora)cmp_uint,
+        (FuncionDestructora)destruir_uint,
+        (FuncionVisitante)visitar_uint,
+        (FuncionCopia)copiar_uint,
+        "uint");
 
     unsigned int cantidad = cantidad_composiciones(funcion), i = 0;
     int status = 0;
@@ -241,8 +235,9 @@ static int aplicar_funcion_interno(Funcion* funcion, Lista* lista, int* acc_oper
     while (i < cantidad && status == 0 && *acc_operaciones < MAX_OPERACIONES && *acc_memoria < MAX_MEMORIA) {
         char* f = funcion_iesima(funcion, i);
         if (strcmp(f, "<") == 0)
-            /* Chequeo si es factible comenzar la repetición sino la salteo, primer/ultimo elemento nunca
-             * devolveria NULL por la condicion previa de lista_longitud, es seguro desreferenciar*/
+            /* Chequeo si es factible comenzar la repetición, sino la salteo.
+             * primer_elemento/ultimo_elemento nunca devolverian NULL, debido a
+             * la condicion previa de lista_longitud, es seguro des-referenciar. */
             if (lista_longitud(lista) && *primer_elemento(lista) != *ultimo_elemento(lista))
                 pila_push(pila_repeticiones, &i);
             else
@@ -270,7 +265,8 @@ static int aplicar_funcion_interno(Funcion* funcion, Lista* lista, int* acc_oper
 }
 
 static int aplicar_base_o_rebuscar(char* nombre_funcion, Lista* lista, int* acc_operaciones,
-                                    int* acc_memoria, Declaraciones declaraciones) {
+    int* acc_memoria, Declaraciones declaraciones) {
+
     TipoFuncion tipo = str_a_tipo(nombre_funcion);
     int valido = 0;
 
@@ -311,12 +307,12 @@ static int aplicar_base_o_rebuscar(char* nombre_funcion, Lista* lista, int* acc_
             *acc_memoria += 1;
             return aplicar_funcion_interno(funcion, lista, acc_operaciones, acc_memoria, declaraciones);
     }
+
     return valido;
 }
 
-// Recibe el i en la posicion del <, tiene que devolverlo en la posicion del > ya que el for hará ++ despues.
 static unsigned int saltear_repeticion(Funcion* funcion, unsigned int i) {
-    int nivel = 1; // Arranco en 1, teniendo en cuenta al '<' por el que acabo de entrar a esta funcion PASAR A DOCUMENTACION
+    int nivel = 1; // Arranco en 1, teniendo en cuenta al '<' por el que acabo de entrar a esta funcion
     while (nivel != 0) {
         i++;
         char* f = funcion_iesima(funcion, i);

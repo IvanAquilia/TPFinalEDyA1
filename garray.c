@@ -4,10 +4,12 @@
 #include <stdlib.h>
 #include <assert.h>
 
-
 #define CAPACIDAD_INICIAL 200
 #define FACTOR_CRECIMIENTO 2
 
+/*
+ * Redimensiona el array con re-alloc hacia la nueva capacidad.
+ */
 static void garray_redimensionar(GArray* array, unsigned int nueva_capacidad);
 
 // ------------------ Crear / Destruir ------------------
@@ -71,35 +73,11 @@ int garray_eliminar(GArray* array) {
 }
 
 // ------------------ Consultas ------------------
-void* garray_primero(GArray* array) {
-    if (array->tamaño_actual == 0) {
-        return NULL;
-    }
-    return array->elementos[0];
-}
-
-void* garray_ultimo(GArray* array) {
-    if (array->tamaño_actual == 0) {
-        return NULL;
-    }
-    return array->elementos[array->tamaño_actual - 1];
-}
-
 void* garray_obtener(GArray* array, unsigned int posicion) {
     if (posicion >= array->tamaño_actual) {
         return NULL;
     }
     return array->elementos[posicion];
-}
-
-// ------------------ Buscar ------------------
-void* garray_buscar(GArray* array, void* dato) {
-    for (unsigned int i = 0; i < array->tamaño_actual; i++) {
-        if (array->cmp(array->elementos[i], dato) == 0) {
-            return array->elementos[i];
-        }
-    }
-    return NULL;
 }
 
 // ------------------ Utilidades ------------------

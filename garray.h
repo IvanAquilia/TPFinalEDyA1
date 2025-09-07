@@ -31,7 +31,7 @@ GArray* garray_crear(unsigned int capacidad_inicial,
                     FuncionCopia copiar);
 
 /*
- * Destruir array (aplica la destructora a cada dato si está definida)
+ * Destruir array (aplica la destructora a cada dato)
  */
 void garray_destruir(GArray* array);
 
@@ -46,24 +46,9 @@ void garray_insertar(GArray* array, void* dato);
 int garray_eliminar(GArray* array);
 
 /*
- * Obtener primer elemento (o NULL si está vacío)
- */
-void* garray_primero(GArray* array);
-
-/*
- * Obtener último elemento (o NULL si está vacío)
- */
-void* garray_ultimo(GArray* array);
-
-/*
  * Obtener elemento en posición específica
  */
 void* garray_obtener(GArray* array, unsigned int posicion);
-
-/*
- * Buscar un elemento (usa la funcion comparadora)
- */
-void* garray_buscar(GArray* array, void* dato);
 
 /*
  * Imprimir array (usa la funcion visitante)
@@ -71,7 +56,7 @@ void* garray_buscar(GArray* array, void* dato);
 void garray_imprimir(const GArray* array);
 
 /*
- * Copiar array (copia referencias, no clona datos)
+ * Copiar array (deep-copy)
  */
 GArray* garray_copiar(const GArray* original);
 

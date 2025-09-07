@@ -4,8 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-// ------ Función hash djb2, hashea nombre del objeto que se esta definiendo (Funcion / Lista) ------
-unsigned long hash_clave(const char* string) { // recibe dato NO NULO
+unsigned long hash_clave(const char* string) { // Recibe dato NO NULO
     unsigned long h = 5381;
     int c;
     while ((c = *string++))

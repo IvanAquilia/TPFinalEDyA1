@@ -35,16 +35,32 @@ typedef struct {
     TipoRespuestaParser tipo;
 } ResultadoParser;
 
-/**
- * Dada la linea ingresada por el usuario
+/*
+ * Dada la linea ingresada por el usuario, realiza todas las verificaciones necesarias para determinar
+ * si se trata de una sentencia valida, si asi lo es, llama a las funciones encargadas de transformar las
+ * strings a los objetos en memoria correspondientes. Luego retorna toda la información recolectada en una
+ * estructura generica valida para todas las operaciones, identificada mediante el campo "Tipo".
  */
 ResultadoParser parser_analizar(const char* linea, Declaraciones declaraciones);
 
 /*
+ * Devuelve 1 si la string coincide con un formato de lista valida, sino 0.
  */
 int verificar_lista(char* lista_str);
 
 /*
+ * Devuelve 1 si la string coincide con un formato de lista valida, sino 0.
+ */
+static int verificar_funcion(char* funcion_str);
+
+/*
+ * Devuelve 1 si la string coincide con un formato de expresion de search valida, sino 0.
+ */
+static int verificar_search(char* cursor);
+
+/*
+ * Libera los datos que temporalmente se guardaron en los campos de la respuesta antes de guardarse en la tabla hash.
+ * La estructura queda lista para volver a utilizarse en una posible siguiente llamada al parser.
  */
 void parser_liberar(ResultadoParser* r);
 #endif

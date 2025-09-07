@@ -9,6 +9,13 @@ typedef void* (*FuncionCopia)(const void* dato);
 typedef void (*FuncionVisitante)(const void* dato);
 
 // ------------------ Definición de estructuras ------------------
+
+/*
+ * Implemento un sistema de entradas de clave-valor, esta permitido que la clave sea el propio valor,
+ * me es mas útil esta implementacion para buscar y hashear mediante los identificadores de las definiciones
+ * del sistema, ergo, dada un Declaracion, es muy facil buscarla mediante su campo "nombre" y comparar strings con
+ * strcmp.
+ */
 typedef struct {
     void* dato;
     void* clave;

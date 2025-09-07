@@ -9,7 +9,7 @@
 #include "pila.h"
 
 #define LARGO_SEARCH 200
-#define MAX_PROFUNDIDAD 8
+#define MAX_PROFUNDIDAD 10
 
 static Funcion* dfs_busqueda(Lista* estado_actual, Lista* objetivo,
                              Pila* pila, Declaraciones declaraciones,
@@ -77,7 +77,7 @@ void visitar_search(const SearchExpr* search) {
     garray_imprimir(search->garray);
 }
 
-unsigned int cantidad_pares_search(const SearchExpr* search) {
+unsigned int cantidad_listas_search(const SearchExpr* search) {
     return search->garray->tamaño_actual;
 }
 
@@ -89,22 +89,14 @@ Funcion* search(Declaraciones declaraciones, SearchExpr* pares) {
     // Pongo todas las funciones (base + definidas por el usuario) auxiliarmente
     // en memoria continua en un GArray para recorrerlas mas eficientemente varias veces.
     FuncionesAll* funciones_todas = obtener_todas_funciones_declaradas(declaraciones);
-    unsigned int cant_funciones_definidas = cantidad_funciones_totales(funciones_todas);
     Pila* backtracking_funciones = pila_crear((FuncionComparadora)comparar_declaracion,
                                                 (FuncionDestructora)destruir_declaracion,
                                                 (FuncionVisitante)visitar_declaracion,
                                                 (FuncionCopia)copiar_declaracion,
                                                 "declaraciones");
-    HashTable* estados_visitados = tabla_hash_crear(
-        10007,                    // capacidad inicial (un primo grande)
-        (FuncionHash)hash_estado,              // función hash
-        (FuncionComparadora)cmp_estado,               // comparador
-        (FuncionDestructora)destruir_estado,          // destructor de dato
-        (FuncionDestructora)destruir_estado,          // destructor de clave (es la misma struct)
-        (FuncionCopia)copiar_estado,            // copia de dato
-        (FuncionCopia)copiar_estado,            // copia de clave
-        (FuncionVisitante)visitar_estado            // visitante (debug)
-    );
+    MemoEstados estados_visitados = crear_tabla_estados();
+    unsigned int cant_funciones_definidas = cantidad_funciones_totales(funciones_todas);
+
     char* nombre_lista_inicio = obtener_lista_iesima(pares, 0);
     char* nombre_lista_objetivo = obtener_lista_iesima(pares, 1);
     Lista* inicio = obtener_def_usuario(declaraciones, nombre_lista_inicio, LISTA);
@@ -120,57 +112,65 @@ Funcion* search(Declaraciones declaraciones, SearchExpr* pares) {
 
     pila_destruir(backtracking_funciones);
     destruir_arreglo_aux_funciones(funciones_todas);
-    tabla_hash_destruir(estados_visitados);
+    destruir_tabla_estados(estados_visitados);
     return resultado;
 }
 
 static Funcion* dfs_busqueda(Lista* estado_actual, Lista* objetivo, Pila* pila, Declaraciones declaraciones,
-                             FuncionesAll* funciones_todas, unsigned int cant_funciones_definidas, SearchExpr* pares,
-                             HashTable* estados_visitados) {
+    FuncionesAll* funciones_todas, unsigned int cant_funciones_definidas,
+    SearchExpr* pares, MemoEstados estados_visitados) {
 
     /* Caso base, me pauso a chequear si es valida la solucion */
     if (listas_iguales(estado_actual, objetivo)) {
-        // Unico caso donde hago una aplicacion compleja
+        // Unico caso donde hago una aplicacion de composiciones desde 0 compleja
         Funcion* compuesta_candidata = reconstruir_funcion_backtracking(pila);
-        int valido = comprobar_composicion_candidata(compuesta_candidata, pares, declaraciones);
 
-        if (valido) {
+        int valido = comprobar_composicion_candidata(compuesta_candidata, pares, declaraciones);
+        if (valido)
             return compuesta_candidata;  // Encontré una solución
-        } else {
-            destruir_funcion(compuesta_candidata);
-        }
+
+        destruir_funcion(compuesta_candidata);
     }
 
     /* Cortar si alcanzo profundidad máxima */
-    if (pila_elementos(pila) >= MAX_PROFUNDIDAD) {
+    if (pila_elementos(pila) >= MAX_PROFUNDIDAD)
         return NULL;
-    }
+
+    /* Estado actual en el que me encuentro (lista + profundidad) */
+    EstadoLista estado = { estado_actual, pila_elementos(pila) };
 
     Funcion* resultado = NULL;
-    EstadoLista estado = { estado_actual, pila_elementos(pila) };
     for (int i = 0; i < cant_funciones_definidas && resultado == NULL; i++) {
-        if (tabla_hash_buscar(estados_visitados, &estado) == NULL) {
+        if (!estado_ya_visitado(estados_visitados, &estado)) {
             Declaracion* declaracion = funcion_definida_iesima(funciones_todas, i);
             int factible_aplicar = podar_casos_triviales(declaracion->valor, pila, estado_actual);
 
             if (factible_aplicar) {
                 ResultadoApply resultado_apply = aplicar_funcion(declaracion->valor, estado_actual, declaraciones);
-                Lista* estado_intermedio = resultado_apply.lista_resultado;
 
+                /* El "estado intermedio" aca se vuelve un "estado actual" dentro de la llamada recursiva siguiente */
+                Lista* estado_intermedio = resultado_apply.lista_resultado;
                 if (resultado_apply.status == 0) {
                     pila_push(pila, declaracion);
-                    resultado = dfs_busqueda(estado_intermedio, objetivo, pila, declaraciones,
-                                              funciones_todas, cant_funciones_definidas, pares, estados_visitados);
+                    resultado = dfs_busqueda(estado_intermedio,
+                        objetivo, pila, declaraciones,
+                        funciones_todas, cant_funciones_definidas,
+                        pares, estados_visitados);
                     if (resultado == NULL)
-                        pila_pop(pila); // Elimino la funcion con la que probe todas las combinaciones
-                                        // hacia abajo en el arbol, tomo la siguiente y repito
+                        /* Elimino la funcion con la que ya probe todas las combinaciones hacia abajo en el arbol */
+                        pila_pop(pila);
                 }
-                destruir_lista(estado_intermedio); // Destruyo copia que genero apply haya o no haya encontrado la solucion
+
+                // Destruyo copia que generó apply, haya o no haya encontrado la solucion
+                destruir_lista(estado_intermedio);
             }
         }
     }
 
-    tabla_hash_insertar(estados_visitados, &estado, &estado);
+    /* Una vez que ya probé con todas las combinaciones de composiciones a partir de
+     * este [estado lista actual + pronfundiad], lo recuerdo para no
+     * volver a intentarlas sin sentido si llego a volver a llegar a este estado */
+    recordar_estado_visitado(estados_visitados, &estado, &estado);
     return resultado;
 }
 
@@ -179,7 +179,7 @@ static int comprobar_composicion_candidata(Funcion* funcion, SearchExpr* pares, 
     if (funcion == NULL)
         return 0;
 
-    unsigned int cantidad_pares = cantidad_pares_search(pares);
+    unsigned int cantidad_pares = cantidad_listas_search(pares);
     int candidata_valida = 1;
     if (cantidad_pares > 2) {
         for (unsigned int i = 2; i < cantidad_pares && candidata_valida; i += 2) {
@@ -260,6 +260,39 @@ static int podar_casos_triviales(Funcion* funcion, Pila* pila, Lista* estado_act
     }
 
     return factible_aplicar;
+}
+
+MemoEstados crear_tabla_estados() {
+    MemoEstados estados = tabla_hash_crear(
+        100019,
+        (FuncionHash)hash_estado,
+        (FuncionComparadora)cmp_estado,
+        (FuncionDestructora)destruir_estado,
+        (FuncionDestructora)destruir_estado,
+        (FuncionCopia)copiar_estado,
+        (FuncionCopia)copiar_estado,
+        (FuncionVisitante)visitar_estado
+    );
+
+    return estados;
+}
+
+void destruir_tabla_estados(MemoEstados estados) {
+    tabla_hash_destruir(estados);
+}
+
+int estado_ya_visitado(MemoEstados estados, EstadoLista* estado) {
+    EstadoLista* encontrado = tabla_hash_buscar(estados, estado);
+    if (encontrado == NULL)
+        return 0;
+
+    return 1;
+}
+
+void recordar_estado_visitado(MemoEstados estados, EstadoLista* estado_clave, EstadoLista* estado_valor) {
+    // No me es relevante el saber si el estado estaba repetido o no.
+    int _repetido = tabla_hash_insertar(estados, estado_clave, estado_valor);
+    (int)_repetido;
 }
 
 unsigned long hash_estado(const EstadoLista* estado) {

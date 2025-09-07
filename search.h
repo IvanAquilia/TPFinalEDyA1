@@ -4,49 +4,102 @@
 #include "pila.h"
 
 /*
- * Array de char*, similiar al tipo Funcion*
+ * Array de char* conteniendo los nombres de las listas a aplicar search.
  * [L11, L12, L21, L22, ...]
  */
 typedef struct {
     GArray* garray;
 } SearchExpr;
 
+/*
+ * Estructura que representa un estado de una lista en el proceso del Search, queda completamente
+ * determinado por el contenido de la lista y la profundidad dentro del arbol de composiciones.
+ */
 typedef struct {
     Lista* lista;
     unsigned int profundidad;
 } EstadoLista;
 
-SearchExpr* strsearch_to_search(char* cursor, Declaraciones declaraciones);
+typedef HashTable* MemoEstados;
 
-SearchExpr* searchexpr_crear();
-
-void destruir_search_expr(SearchExpr* search);
-
-void agregar_expr(SearchExpr* search, char* lista);
-
-void visitar_search(const SearchExpr* search);
-
-unsigned int cantidad_pares_search(const SearchExpr* search);
-
-Funcion* search(Declaraciones declaraciones, SearchExpr* search);
-
+/* --------- Funciones usadas en MemoEstados --------- */
 /*
- * Dada una pila de funciones, construye una funcion resultado de componer todas las de la pila.
- * Por la naturaleza inversa de como se aplican las funciones en funciones de listas a comparacion
- * de funciones matematicas clasicas, al componer las funciones en el orden que me las devuelve la pila,
- * es decir, desde la ultima que se aplicó hasta la primera, obtengo como resultado una funcion con orden
- * completamente inverso al calculado. En vez de tener que insertar al inicio del Garray de la funcion a componer,
- * desplazando los elementos (costoso), para solucionar esto, es mas simple crearme un array auxiliar que guarde las
- * funciones en el orden que salieron de la pila, y luego para componer mi funcion final lo recorro al reves. El costo
- * de esto es lineal y dado que el largo del array va a ser de la profundidad permitida del DFS (numero menor a 20) es
- * despreciable.
- * TENGO QUE VIOALR UN POCO LA INTERFAZ Y MOVEREM DE ABAJO HACIA ARRIBA CON HEAD Y TAIL PERO ES QUE LA PILA ES MUY UTIL PARA LO OTRO Y HCAER ESTO E MEJOR QUE TENER QUE DESPLAZARARRAYS INSERTANDO AL PRINCIPIO
+ * Implementacion clasica del popular algoritmo hash_combine de la biblioteca Boost de C++,
+ * ampliamente testeado y util para combinar resultados de hasheos previos en uno final, en
+ * mi caso mezclo el hash de la lista con la profundidad de la misma.
  */
-Funcion* reconstruir_funcion_backtracking(Pila* pila);
-
 unsigned long hash_estado(const EstadoLista* estado);
 int cmp_estado(const EstadoLista* a, const EstadoLista* b);
 EstadoLista* copiar_estado(const EstadoLista* estado);
 void destruir_estado(EstadoLista* estado);
 void visitar_estado(const EstadoLista* estado);
+
+
+/*
+ * Ya recibe la expresion verificada que es una expresion no vacia y que tiene nombres de listas dentro separados
+ * como se espera con '; ' y ', '. Lee la string en dicho formato y por cada lista que se encuentra, decide si es
+ * una lista existente en la tabla e inserta dicho identifacador en el GArray subyacente.
+ * Modifica la cadena original, no hay problema, es el ultimo eslabón del parser.
+ */
+SearchExpr* strsearch_to_search(char* cursor, Declaraciones declaraciones);
+
+/*
+ * Crea una expresion de Search, con el GArray correspondiente.
+ */
+SearchExpr* searchexpr_crear();
+
+/*
+ * Destruye una expresion de search.
+ */
+void destruir_search_expr(SearchExpr* search);
+
+/*
+ * Agrega una lista a tener en cuenta para la expresion del search.
+ */
+void agregar_expr(SearchExpr* search, char* lista);
+
+/*
+ * Imprime las listas a aplicar la busqueda.
+ */
+void visitar_search(const SearchExpr* search);
+
+/*
+ * Retorna la cantidad de listas en la expresion search, siempre multiplo de 2.
+ */
+unsigned int cantidad_listas_search(const SearchExpr* search);
+
+/*
+ * Entrada publica a la operacion search, inicializa las estructuras de datos a utilizar en la busqueda,
+ * separa las 2 primeras listas, llama al algoritmo de busqueda y maneja la salida y liberacion de memoria.
+ */
+Funcion* search(Declaraciones declaraciones, SearchExpr* search);
+
+/*
+ * Dada una pila de funciones, construye una funcion resultado de componer todas las de la pila.
+ * Nota:
+ * Realiza una copia auxiliar en un array temporal de las funciones, luego recorre ese array en orden inverso para
+ * formar la funcion final en el orden que las funciones de listas son aplicadas segun la teoria.
+ */
+Funcion* reconstruir_funcion_backtracking(Pila* pila);
+
+/*
+ * Crea la tabla de EstadosLista usada para llevar constancia de en que estados he estado.
+ */
+MemoEstados crear_tabla_estados();
+
+/*
+ * Destruye la tabla de estados.
+ */
+void destruir_tabla_estados(MemoEstados estados);
+
+/*
+ * Devuelve 1 si el estado ya se encuentra en la tabla de estados, si no 0.
+ */
+int estado_ya_visitado(MemoEstados estados, EstadoLista* estado);
+
+/*
+ * Almacena el estado en la tabla de estados.
+ */
+void recordar_estado_visitado(MemoEstados estados, EstadoLista* estado_clave, EstadoLista* estado_valor);
+
 #endif

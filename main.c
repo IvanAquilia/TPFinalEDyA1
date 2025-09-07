@@ -3,9 +3,9 @@
 #include "funciones.h"
 #include "hash.h"
 #include "utils.h"
+#include "search.h"
 #include <stdio.h>
 
-#include "search.h"
 
 int main(void) {
     Declaraciones declaraciones = declaraciones_crear();
@@ -27,7 +27,7 @@ int main(void) {
             case OP_DEFL:
                 char* id_lista = r.parte_izquierda;
                 void* def_lista = r.parte_derecha;
-                guardada = definir_lista(id_lista, def_lista, declaraciones);
+                guardada = definir(LISTA, id_lista, def_lista, declaraciones);
                 if (guardada)
                     printf("Lista '%s' definida con exito\n", id_lista);
                 else
@@ -37,7 +37,7 @@ int main(void) {
             case OP_DEFF:
                 char* id_funcion = r.parte_izquierda;
                 void* def_funcion = r.parte_derecha;
-                guardada = definir_funcion(id_funcion, def_funcion, declaraciones);
+                guardada = definir(FUNCION, id_funcion, def_funcion, declaraciones);
                 if (guardada)
                     printf("Funcion '%s' definida con exito\n", id_funcion);
                 else
@@ -48,14 +48,13 @@ int main(void) {
                 char* nombre_funcion = r.parte_izquierda;
                 char* string_lista = (char*)r.parte_derecha;
                 int in_place = r.in_place;
-                Funcion* funcion;
-                Lista* lista;
+                Funcion* funcion = NULL;
+                Lista* lista = NULL;
 
-                int obtenidas = obtener_funcion_y_lista(&funcion, &lista, nombre_funcion, string_lista, in_place,
-                                                        declaraciones);
+                int obtenidas = obtener_funcion_y_lista(&funcion, &lista, nombre_funcion,
+                    string_lista, in_place, declaraciones);
                 if (obtenidas) {
                     ResultadoApply resultado = aplicar_funcion(funcion, lista, declaraciones);
-
                     if (resultado.status == 0)
                         visitar_lista(resultado.lista_resultado);
                     else if (resultado.status < 0)
@@ -74,7 +73,6 @@ int main(void) {
                             printf("ERROR: lista literal mal formada: '%s'\n", string_lista);
                     }
                 }
-
                 if (lista && in_place)
                     destruir_lista(lista); // Destruyo la lista dummy temporal creada para el in-place apply
 
@@ -110,15 +108,10 @@ int main(void) {
                 en_funcionamiento = 0;
                 break;
         }
-
-        tabla_hash_recorrer(declaraciones);
-        parser_liberar(&r); // En el caso de los DEFF y DEFL, una vez que
-                            // se transformo la respuesta del
-                            // parser a una Declaracion y se guardo en la tabla
-                            // mediante un deepcopy, puedo liberar la respuesta.
+        parser_liberar(&r);
     }
 
-    tabla_hash_destruir(declaraciones);
+    destruir_declaraciones(declaraciones);
     return 0;
 }
 

@@ -6,10 +6,10 @@
 
 
 Pila* pila_crear(FuncionComparadora cmp,
-                  FuncionDestructora destruir,
-                  FuncionVisitante visitar,
-                  FuncionCopia copiar,
-                  char* tipo_pila) {
+    FuncionDestructora destruir,
+    FuncionVisitante visitar,
+    FuncionCopia copiar,
+    char* tipo_pila) {
 
     Pila* pila = malloc(sizeof(Pila));
     assert(pila != NULL);
@@ -45,8 +45,8 @@ void pila_push(Pila* pila, void* dato) {
 }
 
 void pila_pop(Pila* pila) {
-    // Solo llamare a pop con Pilas no vacias.
-    glist_eliminar_inicio(pila->glist);
+    int _aux = glist_eliminar_inicio(pila->glist);
+    (int)_aux;
 }
 
 void* pila_top(Pila* pila) {

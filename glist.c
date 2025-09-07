@@ -132,18 +132,6 @@ void* glist_ultimo(GList* lista) {
     return lista->tail->dato;
 }
 
-// ------------------ Buscar ------------------
-void* glist_buscar(GList* lista, void* dato) {
-    Nodo* actual = lista->head;
-    while (actual != NULL) {
-        if (lista->cmp(actual->dato, dato) == 0) {
-            return actual->dato;
-        }
-        actual = actual->sig;
-    }
-    return NULL;
-}
-
 // ------------------ Utilidades ------------------
 void glist_imprimir(const GList* lista) {
     Nodo* actual = lista->head;
