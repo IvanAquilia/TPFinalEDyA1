@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-unsigned long hash_clave(const char* string) { // Recibe dato NO NULO
+unsigned long hash_identificador(const char* string) { // Recibe dato NO NULO
     unsigned long h = 5381;
     int c;
     while ((c = *string++))

@@ -123,7 +123,7 @@ int guardar_declaracion(Declaraciones declaraciones, Declaracion* declaracion) {
 Declaraciones declaraciones_crear() {
     Declaraciones declaraciones = tabla_hash_crear(
         CANTIDAD_DECLARACIONES,
-        (FuncionHash)hash_clave,
+        (FuncionHash)hash_identificador,
         (FuncionComparadora)cmp_str,
         (FuncionDestructora)destruir_declaracion,
         (FuncionDestructora)destruir_str,
@@ -138,6 +138,7 @@ void destruir_declaraciones(Declaraciones declaraciones) {
 }
 
 /* ------------- ESTADOS DE LISTA ------------- */
+
 unsigned long hash_estado(const EstadoLista* estado) {
     unsigned long h = hash_lista(estado->lista);
     h ^= estado->profundidad + 0x9e3779b97f4a7c15ull + (h << 6) + (h >> 2);
@@ -145,10 +146,10 @@ unsigned long hash_estado(const EstadoLista* estado) {
 }
 
 int cmp_estado(const EstadoLista* a, const EstadoLista* b) {
-    if (listas_iguales(a->lista, b->lista) && a->profundidad == b->profundidad)
+    if (a->profundidad == b->profundidad && listas_iguales(a->lista, b->lista))
         return 0;
 
-    return a->profundidad < b->profundidad ? -1 : 1;
+    return -1;
 }
 
 EstadoLista* copiar_estado(const EstadoLista* estado) {

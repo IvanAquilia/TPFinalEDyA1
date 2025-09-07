@@ -113,7 +113,6 @@ int main(void) {
         }
         parser_liberar(&r);
     }
-
     destruir_declaraciones(declaraciones);
     return 0;
 }

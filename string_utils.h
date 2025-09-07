@@ -5,7 +5,7 @@
  * Función hash djb2 para strings, hashea nombre del objeto que se esta definiendo (Funcion / Lista).
  * Especialmente util y testada para caracteres, es muy livina de ejecutar.
  */
-unsigned long hash_clave(const char* string);
+unsigned long hash_identificador(const char* string);
 
 /*
  * Dado un puntero a char lo avanza hasta la siguiente posicion donde no haya un espacio en blanco
