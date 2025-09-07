@@ -39,6 +39,7 @@ void visitar_uint(const unsigned int* dato);
 /*
  * Utils declaracion/declaraciones
  */
+int comparar_declaracion(const Declaracion* declaracion1, const Declaracion* declaracion2);
 void destruir_declaracion(Declaracion* declaracion);
 Declaracion* copiar_declaracion(const Declaracion* declaracion);
 void visitar_declaracion(const Declaracion* declaracion);

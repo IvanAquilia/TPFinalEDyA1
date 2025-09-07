@@ -11,9 +11,9 @@
 
 
 #define LARGO_FUNCIONES 200
-#define MAX_OPERACIONES 33554432 // 2^25 aplicaciones de funciones (una base,
+#define MAX_OPERACIONES 524288 // 2^19 aplicaciones de funciones (una base,
                                  // comenzar/termianar repeticiones, aplicar una custom) por apply
-#define MAX_MEMORIA 100000 // 100.000 llamadas recursivas maximo por apply.
+#define MAX_MEMORIA 10000 // 10.000 llamadas recursivas maximo por apply.
 
 
 /*
@@ -26,7 +26,6 @@ static int aplicar_funcion_interno(Funcion* funcion, Lista* lista, int* acc_oper
 static int aplicar_base_o_rebuscar(char* nombre_funcion, Lista* lista, int* acc_operaciones,
                                     int* acc_memoria, Declaraciones declaraciones);
 static unsigned int saltear_repeticion(Funcion* funcion, unsigned int i);
-static TipoFuncion str_a_tipo(char* nombre_funcion);
 
 /*
  * Ya recibe string verificada que es una seguidilla de alpha +
@@ -34,8 +33,8 @@ static TipoFuncion str_a_tipo(char* nombre_funcion);
  * en modificar la original, se va a destruie luego de
  * todos modos, necesito pasarlo a lista/array
  */
-Funcion* strfunc_to_array(char* cadena, Declaraciones declaraciones) {
-    Funcion* funcion = funcion_crear();
+Funcion* strfunc_to_array(char* nombre, char* cadena, Declaraciones declaraciones) {
+    Funcion* funcion = funcion_crear(nombre);
     char* cursor = cadena;
     int funcion_inexistente = 0;
     while (*cursor && !funcion_inexistente) {
@@ -74,7 +73,7 @@ Funcion* strfunc_to_array(char* cadena, Declaraciones declaraciones) {
     return funcion;
 }
 
-Funcion* funcion_crear() {
+Funcion* funcion_crear(char* nombre) {
     Funcion* funcion = malloc(sizeof(Funcion));
     assert(funcion != NULL);
     funcion->garray = garray_crear(LARGO_FUNCIONES,
@@ -82,6 +81,7 @@ Funcion* funcion_crear() {
                                     (FuncionDestructora)destruir_str,
                                     (FuncionVisitante)visitar_str,
                                     (FuncionCopia)copiar_str);
+
     return funcion;
 }
 
@@ -89,16 +89,16 @@ FuncionesAll* obtener_todas_funciones_declaradas(Declaraciones declaraciones) {
     FuncionesAll* funciones_all = malloc(sizeof(FuncionesAll));
     assert(funciones_all != NULL);
     funciones_all->garray = garray_crear(declaraciones->elementos,
-                                        (FuncionComparadora)comparar_funcion,
-                                        (FuncionDestructora)destruir_funcion,
-                                        (FuncionVisitante)visitar_funcion,
-                                        (FuncionCopia)copiar_funcion);
+                                        (FuncionComparadora)comparar_declaracion,
+                                        (FuncionDestructora)destruir_declaracion,
+                                        (FuncionVisitante)visitar_declaracion,
+                                        (FuncionCopia)copiar_declaracion);
 
     for (unsigned int i = 0; i < declaraciones->capacidad; i++) {
         if (declaraciones->buckets[i] != NULL) {
             Declaracion* declaracion = declaraciones->buckets[i]->dato;
             if (declaracion->tipo == FUNCION) {
-                garray_insertar(funciones_all->garray, declaracion->valor);
+                garray_insertar(funciones_all->garray, declaracion);
             }
         }
     }
@@ -132,7 +132,7 @@ void visitar_funcion(const Funcion* funcion) {
     garray_imprimir(funcion->garray);
 }
 
-int comparar_funcion(const Funcion* funcion1, const Funcion* funcion2) {
+int funciones_iguales(const Funcion* funcion1, const Funcion* funcion2) {
     int iguales = 1;
     if (cantidad_composiciones(funcion1) == cantidad_composiciones(funcion2)) {
         for (unsigned int i = 0; i < cantidad_composiciones(funcion1) && iguales; i++) {
@@ -142,9 +142,29 @@ int comparar_funcion(const Funcion* funcion1, const Funcion* funcion2) {
                 iguales = 0;
             }
         }
+    } else {
+        iguales = 0;
     }
 
     return iguales;
+}
+
+TipoFuncion str_a_tipo(char* nombre_funcion) {
+    TipoFuncion tipo = Custom;
+    if (strcmp(nombre_funcion, "Oi") == 0)
+        tipo = Oi;
+    if (strcmp(nombre_funcion, "Od") == 0)
+        tipo = Od;
+    if (strcmp(nombre_funcion, "Si") == 0)
+        tipo = Si;
+    if (strcmp(nombre_funcion, "Sd") == 0)
+        tipo = Sd;
+    if (strcmp(nombre_funcion, "Di") == 0)
+        tipo = Di;
+    if (strcmp(nombre_funcion, "Dd") == 0)
+        tipo = Dd;
+
+    return tipo;
 }
 
 unsigned int cantidad_composiciones(const Funcion* funcion) {
@@ -159,8 +179,8 @@ char* funcion_iesima(const Funcion* funcion, unsigned int i) {
     return (char*)funcion->garray->elementos[i];
 }
 
-Funcion* funcion_definida_iesima(const FuncionesAll* funciones, unsigned int i) {
-    return (Funcion*)funciones->garray->elementos[i];
+Declaracion* funcion_definida_iesima(const FuncionesAll* funciones, unsigned int i) {
+    return (Declaracion*)funciones->garray->elementos[i];
 }
 
 int definir_funcion(char* nombre, void* funcion, Declaraciones declaraciones) {
@@ -307,22 +327,4 @@ static unsigned int saltear_repeticion(Funcion* funcion, unsigned int i) {
     }
 
     return i;
-}
-
-static TipoFuncion str_a_tipo(char* nombre_funcion) {
-    TipoFuncion tipo = Custom;
-    if (strcmp(nombre_funcion, "Oi") == 0)
-        tipo = Oi;
-    if (strcmp(nombre_funcion, "Od") == 0)
-        tipo = Od;
-    if (strcmp(nombre_funcion, "Si") == 0)
-        tipo = Si;
-    if (strcmp(nombre_funcion, "Sd") == 0)
-        tipo = Sd;
-    if (strcmp(nombre_funcion, "Di") == 0)
-        tipo = Di;
-    if (strcmp(nombre_funcion, "Dd") == 0)
-        tipo = Dd;
-
-    return tipo;
 }

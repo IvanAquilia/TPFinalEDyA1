@@ -58,6 +58,24 @@ void visitar_uint(const unsigned int* natural) {
 }
 
 // ----------- DECLARACIONES
+int comparar_declaracion(const Declaracion* declaracion1, const Declaracion* declaracion2) {
+    // 2 declaraciones nunca van a ser iguales mediante su nombre, la tabla hash no lo permite por diseño.
+    // Asi decimos que son iguales por el contenido.
+    int iguales = -1;
+    if (declaracion1->tipo == declaracion2->tipo) {
+        if (declaracion1->tipo == FUNCION) {
+            if (funciones_iguales(declaracion1->valor, declaracion2->valor))
+                iguales = 0;
+        }
+        if (declaracion1->tipo == LISTA) {
+            if (listas_iguales(declaracion1->valor, declaracion2->valor))
+                iguales = 0;
+        }
+    }
+
+    return iguales;
+}
+
 void destruir_declaracion(Declaracion* declaracion) {
     free(declaracion->nombre);
     if (declaracion->tipo == LISTA)
@@ -69,6 +87,7 @@ void destruir_declaracion(Declaracion* declaracion) {
 }
 
 Declaracion* copiar_declaracion(const Declaracion* declaracion) {
+
     Declaracion* nueva_declaracion = malloc(sizeof(Declaracion));
     assert(nueva_declaracion != NULL);
 

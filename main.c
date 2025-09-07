@@ -81,6 +81,7 @@ int main(void) {
                 break;
             case OP_SEARCH:
                 void* def_search = r.parte_derecha;
+                printf("Buscando...\n");
                 Funcion* resultado_search = search(declaraciones, def_search);
                 if (resultado_search != NULL) {
                     printf("Funcion encontrada: \n");
@@ -90,7 +91,7 @@ int main(void) {
                     destruir_funcion(resultado_search);
                 }
                 else
-                    printf("No se encontro una funcion que cumpla con el objetivo. \n");
+                    printf("No se encontro una funcion que cumpla con el objetivo en el tiempo provisto. \n");
 
                 break;
             case OP_INVALIDA:
@@ -110,6 +111,7 @@ int main(void) {
                 break;
         }
 
+        tabla_hash_recorrer(declaraciones);
         parser_liberar(&r); // En el caso de los DEFF y DEFL, una vez que
                             // se transformo la respuesta del
                             // parser a una Declaracion y se guardo en la tabla

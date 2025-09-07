@@ -25,6 +25,10 @@ void pila_destruir(Pila* pila);
 
 /*
  */
+Pila* copiar_pila(const Pila* pila);
+
+/*
+ */
 void pila_push(Pila* pila, void* dato);
 
 /*

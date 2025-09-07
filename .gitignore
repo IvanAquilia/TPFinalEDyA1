@@ -7,11 +7,23 @@ CMakeLists.txt
 *.exe
 *.out
 programa
-    deff Mi = Oi <Si> Dd;
-    deff Md = Od <Sd> Di;
-    deff suma = Md Od <Sd Mi Sd Md> Di Dd Mi;
 
 
+deff Md = Od <Sd> Di;
+deff Mi = Oi <Si> Dd;
+deff DDi = Od <Sd> Mi;
 
+defl L1 = [1, 0, 3];
+defl L2 = [1, 2];
+defl L3 = [2, 0, 4];
+defl L4 = [2, 2];
 
-tal heap usage: 8,541,217 allocs, 8,541,217 frees, 119,867,907 bytes allocated
+>>> defl L1 = [1, 0, 3];
+>>> defl L2 = [1,2];
+>>> defl L3 = [2,0,2];
+>>> defl L4 = [2,1];
+
+defl L1 = [0,1,2];
+defl L2 = [1,2,3];
+defl L3 = [0,0,0];
+defl L4 = [1,1,1];

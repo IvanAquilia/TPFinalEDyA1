@@ -33,6 +33,13 @@ void pila_destruir(Pila* pila) {
     free(pila);
 }
 
+Pila* copiar_pila(const Pila* pila) {
+    Pila* copia = malloc(sizeof(Pila));
+    assert(copia != NULL);
+    copia->glist = glist_copiar(pila->glist);
+    return copia;
+}
+
 void pila_push(Pila* pila, void* dato) {
     glist_insertar_inicio(pila->glist, dato);
 }

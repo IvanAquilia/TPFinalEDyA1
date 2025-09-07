@@ -32,7 +32,7 @@ typedef struct {
 
 /*
  */
-Funcion* strfunc_to_array(char* cadena, Declaraciones declaraciones);
+Funcion* strfunc_to_array(char* nombre, char* cadena, Declaraciones declaraciones);
 
 /*
  */
@@ -67,7 +67,11 @@ void visitar_funcion(const Funcion* funcion);
 
 /*
  */
-int comparar_funcion(const Funcion* funcion1, const Funcion* funcion2);
+int funciones_iguales(const Funcion* funcion1, const Funcion* funcion2);
+
+/*
+ */
+TipoFuncion str_a_tipo(char* nombre_funcion);
 
 /*
  */
@@ -83,7 +87,7 @@ char* funcion_iesima(const Funcion* funcion, unsigned int i);
 
 /*
  */
-Funcion* funcion_definida_iesima(const FuncionesAll* funciones, unsigned int i);
+Declaracion* funcion_definida_iesima(const FuncionesAll* funciones, unsigned int i);
 
 /*
  */

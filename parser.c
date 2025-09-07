@@ -62,7 +62,7 @@ ResultadoParser parser_analizar(const char* input, Declaraciones declaraciones) 
             if (nombre && *cursor) {
                 int valida = verificar_funcion(cursor);
                 if (valida) {
-                    Funcion* f = strfunc_to_array(cursor, declaraciones);
+                    Funcion* f = strfunc_to_array(nombre, cursor, declaraciones);
                     if (f != NULL) {
                         nombre = str_dup(nombre); // Duplico por mismo motivo
                         terminar_parseo(&r, nombre, f, 0, OP_DEFF);

@@ -9,13 +9,14 @@
 #include "pila.h"
 
 #define LARGO_SEARCH 200
-#define MAX_PROFUNDIDAD 10
+#define MAX_PROFUNDIDAD 8
 
-static Funcion* dfs_busqueda(Lista* actual, Lista* objetivo,
-                        Pila* pila, Declaraciones declaraciones,
-                        FuncionesAll* funciones_todas, unsigned int cant_funciones_definidas,
-                        SearchExpr* pares);
+static Funcion* dfs_busqueda(Lista* estado_actual, Lista* objetivo,
+                             Pila* pila, Declaraciones declaraciones,
+                             FuncionesAll* funciones_todas, unsigned int cant_funciones_definidas,
+                             SearchExpr* pares);
 static int comprobar_composicion_candidata(Funcion* funcion, SearchExpr* pares, Declaraciones declaraciones);
+static int podar_casos_triviales(Funcion* funcion, Pila* pila, Lista* estado_actual);
 
 SearchExpr* strsearch_to_search(char* cursor, Declaraciones declaraciones) {
     cursor += 7;
@@ -85,15 +86,15 @@ char* obtener_lista_iesima(const SearchExpr* search, unsigned int i) {
 }
 
 Funcion* search(Declaraciones declaraciones, SearchExpr* pares) {
-    // Pongo todas las funciones (base + definidas por el usuario) auxiliarment
+    // Pongo todas las funciones (base + definidas por el usuario) auxiliarmente
     // en memoria continua en un GArray para recorrerlas mas eficientemente varias veces.
     FuncionesAll* funciones_todas = obtener_todas_funciones_declaradas(declaraciones);
     unsigned int cant_funciones_definidas = cantidad_funciones_totales(funciones_todas);
-    Pila* backtracking_funciones = pila_crear((FuncionComparadora)comparar_funcion,
-                                                (FuncionDestructora)destruir_funcion,
-                                                (FuncionVisitante)visitar_funcion,
-                                                (FuncionCopia)copiar_funcion,
-                                                "funcion");
+    Pila* backtracking_funciones = pila_crear((FuncionComparadora)comparar_declaracion,
+                                                (FuncionDestructora)destruir_declaracion,
+                                                (FuncionVisitante)visitar_declaracion,
+                                                (FuncionCopia)copiar_declaracion,
+                                                "declaraciones");
 
     char* nombre_lista_inicio = obtener_lista_iesima(pares, 0);
     char* nombre_lista_objetivo = obtener_lista_iesima(pares, 1);
@@ -113,50 +114,45 @@ Funcion* search(Declaraciones declaraciones, SearchExpr* pares) {
     return resultado;
 }
 
-static Funcion* dfs_busqueda(Lista* actual, Lista* objetivo,
-                        Pila* pila, Declaraciones declaraciones,
-                        FuncionesAll* funciones_todas, unsigned int cant_funciones_definidas,
-                        SearchExpr* pares) {
+static Funcion* dfs_busqueda(Lista* estado_actual, Lista* objetivo, Pila* pila, Declaraciones declaraciones,
+                             FuncionesAll* funciones_todas, unsigned int cant_funciones_definidas, SearchExpr* pares) {
 
-    Funcion* resultado = NULL;
-    // Caso base: lista actual == objetivo
-    if (listas_iguales(actual, objetivo)) {
-
+    /* Caso base, me pauso a chequear si es valida la solucion */
+    if (listas_iguales(estado_actual, objetivo)) {
         // Unico caso donde hago una aplicacion compleja
         Funcion* compuesta_candidata = reconstruir_funcion_backtracking(pila);
         int valido = comprobar_composicion_candidata(compuesta_candidata, pares, declaraciones);
 
-        if (valido)
-            resultado = compuesta_candidata;
-            return resultado;  // Encontré una solución
+        if (valido) {
+            return compuesta_candidata;  // Encontré una solución
+        } else {
+            destruir_funcion(compuesta_candidata);
+        }
     }
 
-    // Cortar si alcanzamos profundidad máxima
-    if (pila_elementos(pila) >= MAX_PROFUNDIDAD)
+    /* Cortar si alcanzo profundidad máxima */
+    if (pila_elementos(pila) >= MAX_PROFUNDIDAD) {
         return NULL;
+    }
 
-    // Probar todas las funciones
+    Funcion* resultado = NULL;
     for (int i = 0; i < cant_funciones_definidas && resultado == NULL; i++) {
-        Funcion* funcion = funcion_definida_iesima(funciones_todas, i);
+        Declaracion* declaracion = funcion_definida_iesima(funciones_todas, i);
+        int factible_aplicar = podar_casos_triviales(declaracion->valor, pila, estado_actual);
 
-        ResultadoApply resultado_apply = aplicar_funcion(funcion, actual, declaraciones);
-        //
-        // CHEQUEAR ACA SI HUBO OVERFLOW ERRO Y ESO Y SINO NO COMPONER O SEA CHEQUEAR RESULTADO.STATUS
-        //
-        Lista* lista_resultado = resultado_apply.lista_resultado;
-
-        // Apilo y sigo recursivamente
-        pila_push(pila, funcion);
-        resultado = dfs_busqueda(lista_resultado, objetivo, pila,
-                                  declaraciones,
-                                  funciones_todas, cant_funciones_definidas,
-                                  pares);
-
-        destruir_lista(lista_resultado); // Destruyo copia que genero apply haya o no haya encontrado la solucion
-
-        if (!resultado)
-            pila_pop(pila); // Elimino la funcion con la que probe todas las combinaciones
-                            // hacia abajo en el arbol tomo la siguiente y repito.
+        if (factible_aplicar) {
+            ResultadoApply resultado_apply = aplicar_funcion(declaracion->valor, estado_actual, declaraciones);
+            Lista* estado_intermedio = resultado_apply.lista_resultado;
+            if (resultado_apply.status == 0) {
+                pila_push(pila, declaracion);
+                resultado = dfs_busqueda(estado_intermedio, objetivo, pila, declaraciones,
+                                          funciones_todas, cant_funciones_definidas, pares);
+                if (resultado == NULL)
+                    pila_pop(pila); // Elimino la funcion con la que probe todas las combinaciones
+                                    // hacia abajo en el arbol, tomo la siguiente y repito
+            }
+            destruir_lista(estado_intermedio); // Destruyo copia que genero apply haya o no haya encontrado la solucion
+        }
     }
 
     return resultado;
@@ -164,38 +160,88 @@ static Funcion* dfs_busqueda(Lista* actual, Lista* objetivo,
 
 // Prueba a partir de la 3er lista, o sea i = 2, o sea 2do par.
 static int comprobar_composicion_candidata(Funcion* funcion, SearchExpr* pares, Declaraciones declaraciones) {
+    if (funcion == NULL)
+        return 0;
+
     unsigned int cantidad_pares = cantidad_pares_search(pares);
     int candidata_valida = 1;
-    for (unsigned int i = 2; i < cantidad_pares && candidata_valida; i += 2) {
-        char* li1_nombre = obtener_lista_iesima(pares, i);
-        char* li2_nombre = obtener_lista_iesima(pares, i + 1);
+    if (cantidad_pares > 2) {
+        for (unsigned int i = 2; i < cantidad_pares && candidata_valida; i += 2) {
+            char* li1_nombre = obtener_lista_iesima(pares, i);
+            char* li2_nombre = obtener_lista_iesima(pares, i + 1);
 
-        Lista* li1 = obtener_def_usuario(declaraciones, li1_nombre, LISTA);
-        Lista* li2 = obtener_def_usuario(declaraciones, li2_nombre, LISTA);
+            Lista* li1 = obtener_def_usuario(declaraciones, li1_nombre, LISTA);
+            Lista* li2 = obtener_def_usuario(declaraciones, li2_nombre, LISTA);
 
-        ResultadoApply resultadoli1 = aplicar_funcion(funcion, li1, declaraciones);
-        if (resultadoli1.status != 0 || !listas_iguales(resultadoli1.lista_resultado, li2))
-            candidata_valida = 0;
+            ResultadoApply resultadoli1 = aplicar_funcion(funcion, li1, declaraciones);
+            visitar_lista(resultadoli1.lista_resultado);
+            if (resultadoli1.status != 0 || !listas_iguales(resultadoli1.lista_resultado, li2))
+                candidata_valida = 0;
 
-        destruir_lista(resultadoli1.lista_resultado);
+            destruir_lista(resultadoli1.lista_resultado);
+        }
     }
-
     return candidata_valida;
 }
 
 Funcion* reconstruir_funcion_backtracking(Pila* pila) {
-    if (strcmp(pila->glist->tipo, "funcion") == 0) {
-        Funcion* funcion = funcion_crear();
-        while (!pila_vacia(pila)) {
-            Funcion* f = pila_top(pila);
-            for (unsigned int i = 0; i < cantidad_composiciones(f); i++) {
-                char* f_i = funcion_iesima(f, i);
-                componer_funcion(funcion, f_i);
-            }
-            pila_pop(pila);
+    if (strcmp(pila->glist->tipo, "declaraciones") == 0) {
+        Pila* _pila = copiar_pila(pila); // Copio para no destruir el backtracking generado hasta ahora en el caso que
+                                         // esta funcion no aplique para los demas pares.
+
+        unsigned int largo = pila_elementos(_pila);
+        char* funciones_buen_orden[largo];
+
+        for (int i = 0; !pila_vacia(_pila) && i < largo; i++) {
+            Declaracion* d = pila_top(_pila);
+            funciones_buen_orden[i] = str_dup(d->nombre);  // Guardo la funcion "compactada" en el caso que sea
+                                                           // una custom, no expando su definicion en sus funciones base.
+            pila_pop(_pila);
         }
+
+        Funcion* funcion = funcion_crear();
+        for (int i = (int)largo - 1; i >= 0 ; i--)
+            componer_funcion(funcion, funciones_buen_orden[i]);
+
+        for (int i = 0; i < largo; i++)
+            free(funciones_buen_orden[i]);
+
+        pila_destruir(_pila);
         return funcion;
     }
 
     return NULL;
+}
+
+static int podar_casos_triviales(Funcion* funcion, Pila* pila, Lista* estado_actual) {
+
+    int factible_aplicar = 1;
+    Declaracion* _d = pila_top(pila);
+    Funcion* ultima_funcion_aplicada = _d != NULL ? _d->valor : NULL;
+    if (ultima_funcion_aplicada != NULL && cantidad_composiciones(ultima_funcion_aplicada) == 1 && cantidad_composiciones(funcion) == 1) {
+        TipoFuncion tipo_a_aplicar = str_a_tipo(funcion_iesima(funcion, 0));
+        TipoFuncion tipo_aplicada = str_a_tipo(funcion_iesima(ultima_funcion_aplicada, 0));
+
+        if (tipo_a_aplicar != Custom && tipo_aplicada != Custom) {
+            unsigned int longitud = lista_longitud(estado_actual);
+            if (longitud > 1) {
+                /* Agregar y sacar un 0 de algun extremo */
+                if ((tipo_aplicada == Od && tipo_a_aplicar == Dd) || (tipo_aplicada == Oi && tipo_a_aplicar == Di)) {
+                    factible_aplicar = 0;
+                }
+            } else if (longitud == 1) {
+                /* Agregar y sacar un 0 de una funcion de un elemento */
+                if ((tipo_aplicada == Od || tipo_aplicada == Oi) && (tipo_a_aplicar == Dd || tipo_a_aplicar == Di)) {
+                    factible_aplicar = 0;
+                }
+            } else {
+                /* Evitar llamar a apply si ya sé que va a ser inválida la operacion */
+                if (tipo_a_aplicar == Si || tipo_a_aplicar == Sd || tipo_a_aplicar == Di || tipo_a_aplicar == Dd) {
+                    factible_aplicar = 0;
+                }
+            }
+        }
+    }
+
+    return factible_aplicar;
 }

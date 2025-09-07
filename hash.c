@@ -69,7 +69,7 @@ int tabla_hash_insertar(HashTable* tabla, const void* clave, const void* dato) {
 
     int insertado = 0, repetido = 0;
 
-    for (unsigned int i = 0; i < capacidad && !insertado && !repetido; i++) {
+    for (unsigned int i = 0; i < capacidad && !repetido && !insertado; i++) {
         unsigned int pos = (indice + i) % capacidad;
         if (tabla->buckets[pos] == NULL) {
             Entrada* nueva = malloc(sizeof(Entrada));
