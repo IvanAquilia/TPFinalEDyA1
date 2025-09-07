@@ -1,5 +1,4 @@
 #include "garray.h"
-#include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>

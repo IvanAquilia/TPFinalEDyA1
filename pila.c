@@ -1,5 +1,4 @@
 #include "pila.h"
-#include "utils.h"
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>

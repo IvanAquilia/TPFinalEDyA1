@@ -5,11 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "funciones.h"
-#include "pila.h"
-
 #define LARGO_SEARCH 200
-#define MAX_PROFUNDIDAD 10
+#define MAX_PROFUNDIDAD 9
 
 static Funcion* dfs_busqueda(Lista* estado_actual, Lista* objetivo,
                              Pila* pila, Declaraciones declaraciones,
@@ -190,7 +187,6 @@ static int comprobar_composicion_candidata(Funcion* funcion, SearchExpr* pares, 
             Lista* li2 = obtener_def_usuario(declaraciones, li2_nombre, LISTA);
 
             ResultadoApply resultadoli1 = aplicar_funcion(funcion, li1, declaraciones);
-            visitar_lista(resultadoli1.lista_resultado);
             if (resultadoli1.status != 0 || !listas_iguales(resultadoli1.lista_resultado, li2))
                 candidata_valida = 0;
 
@@ -295,32 +291,3 @@ void recordar_estado_visitado(MemoEstados estados, EstadoLista* estado_clave, Es
     (int)_repetido;
 }
 
-unsigned long hash_estado(const EstadoLista* estado) {
-    unsigned long h = hash_lista(estado->lista);
-    h ^= estado->profundidad + 0x9e3779b97f4a7c15ull + (h << 6) + (h >> 2);
-    return h;
-}
-
-int cmp_estado(const EstadoLista* a, const EstadoLista* b) {
-    if (listas_iguales(a->lista, b->lista) && a->profundidad == b->profundidad)
-        return 0;
-
-    return a->profundidad < b->profundidad ? -1 : 1;
-}
-
-EstadoLista* copiar_estado(const EstadoLista* estado) {
-    EstadoLista* nuevo = malloc(sizeof(EstadoLista));
-    nuevo->lista = copiar_lista(estado->lista);
-    nuevo->profundidad = estado->profundidad;
-    return nuevo;
-}
-
-void destruir_estado(EstadoLista* estado) {
-    destruir_lista(estado->lista);
-    free(estado);
-}
-
-void visitar_estado(const EstadoLista* estado) {
-    printf("Profundidad=%u, Lista=", estado->profundidad);
-    visitar_lista(estado->lista);
-}

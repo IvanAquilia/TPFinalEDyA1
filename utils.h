@@ -1,13 +1,23 @@
 #ifndef UTILS_H
 #define UTILS_H
 #include "hash.h"
+#include "listas.h"
 
 typedef enum {
     LISTA,
     FUNCION,
 } TipoDeclaracion;
 
-/**
+/*
+ * Estructura que representa un estado de una lista en el proceso del Search, queda completamente
+ * determinado por el contenido de la lista y la profundidad dentro del arbol de composiciones.
+ */
+typedef struct {
+    Lista* lista;
+    unsigned int profundidad;
+} EstadoLista;
+
+/*
  * Estructura que representa las declaraciones tanto
  * de listas como de funciones del usuario. Es lo que habrá en cada
  * casilla de la tabla hash utilizada.
@@ -40,6 +50,21 @@ void visitar_declaracion(const Declaracion* declaracion);
 int guardar_declaracion(Declaraciones declaraciones, Declaracion* declaracion);
 Declaraciones declaraciones_crear();
 void destruir_declaraciones(Declaraciones declaraciones);
+
+/* Utils estados de lista */
+
+/*
+ * Implementacion clasica del popular algoritmo hash_combine de la biblioteca Boost de C++,
+ * ampliamente testeado y util para combinar resultados de hasheos previos en uno final, en
+ * mi caso mezclo el hash de la lista con la profundidad de la misma.
+ */
+unsigned long hash_estado(const EstadoLista* estado);
+int cmp_estado(const EstadoLista* a, const EstadoLista* b);
+EstadoLista* copiar_estado(const EstadoLista* estado);
+void destruir_estado(EstadoLista* estado);
+void visitar_estado(const EstadoLista* estado);
+
+
 
 /* Auxiliares */
 

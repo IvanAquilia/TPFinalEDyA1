@@ -1,7 +1,5 @@
 #include "funciones.h"
 #include "string_utils.h"
-#include "utils.h"
-#include "listas.h"
 #include "parser.h"
 #include "pila.h"
 #include <assert.h>

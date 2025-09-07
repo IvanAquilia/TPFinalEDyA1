@@ -1,6 +1,5 @@
 #ifndef GLIST_H
 #define GLIST_H
-#include "utils.h"
 
 // ------------------ Funciones genéricas usadas en la interfaz ------------------
 typedef int (*FuncionComparadora)(const void* a, const void* b);

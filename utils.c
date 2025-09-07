@@ -137,9 +137,38 @@ void destruir_declaraciones(Declaraciones declaraciones) {
     tabla_hash_destruir(declaraciones);
 }
 
+/* ------------- ESTADOS DE LISTA ------------- */
+unsigned long hash_estado(const EstadoLista* estado) {
+    unsigned long h = hash_lista(estado->lista);
+    h ^= estado->profundidad + 0x9e3779b97f4a7c15ull + (h << 6) + (h >> 2);
+    return h;
+}
+
+int cmp_estado(const EstadoLista* a, const EstadoLista* b) {
+    if (listas_iguales(a->lista, b->lista) && a->profundidad == b->profundidad)
+        return 0;
+
+    return a->profundidad < b->profundidad ? -1 : 1;
+}
+
+EstadoLista* copiar_estado(const EstadoLista* estado) {
+    EstadoLista* nuevo = malloc(sizeof(EstadoLista));
+    nuevo->lista = copiar_lista(estado->lista);
+    nuevo->profundidad = estado->profundidad;
+    return nuevo;
+}
+
+void destruir_estado(EstadoLista* estado) {
+    destruir_lista(estado->lista);
+    free(estado);
+}
+
+void visitar_estado(const EstadoLista* estado) {
+    printf("Profundidad=%u, Lista=", estado->profundidad);
+    visitar_lista(estado->lista);
+}
 
 /* ------------- AUXILIARES/VARIAS ------------- */
-
 int definir(TipoDeclaracion tipo, char* nombre, void* defincion, Declaraciones declaraciones) {
     Declaracion declaracion;
     declaracion.nombre = nombre;

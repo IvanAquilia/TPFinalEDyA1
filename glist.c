@@ -1,10 +1,10 @@
 #include "glist.h"
+#include "string_utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
 
-#include "string_utils.h"
 
 // ------------------ Crear / Destruir ------------------
 GList* glist_crear(FuncionComparadora cmp,

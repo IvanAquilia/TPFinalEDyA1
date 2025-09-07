@@ -2,6 +2,7 @@
 #define FUNCIONES_H
 #include "garray.h"
 #include "listas.h"
+#include "utils.h"
 
 typedef enum {
     Oi,

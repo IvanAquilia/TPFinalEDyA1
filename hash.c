@@ -1,9 +1,8 @@
 #include "hash.h"
+#include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-
-#include "utils.h"
 
 #define FACTOR_CARGA_MAX 0.7
 

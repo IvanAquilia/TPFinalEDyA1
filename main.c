@@ -2,7 +2,6 @@
 #include "listas.h"
 #include "funciones.h"
 #include "hash.h"
-#include "utils.h"
 #include "search.h"
 #include <stdio.h>
 
@@ -83,13 +82,17 @@ int main(void) {
                 Funcion* resultado_search = search(declaraciones, def_search);
                 if (resultado_search != NULL) {
                     printf("Funcion encontrada: \n");
-                    visitar_funcion(resultado_search);
-                    printf("\n");
+                    if (cantidad_composiciones(resultado_search) == 0)
+                        printf("id");
+                    else
+                        visitar_funcion(resultado_search);
 
+                    printf("\n");
                     destruir_funcion(resultado_search);
                 }
                 else
-                    printf("No se encontro una funcion que cumpla con el objetivo en el tiempo provisto. \n");
+                    printf("Se recorrieron todas las funciones y no se encontro una que cumpla con el "
+                           "objetivo en el tiempo y profundidad limite. \n");
 
                 break;
             case OP_INVALIDA:

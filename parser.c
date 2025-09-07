@@ -1,6 +1,4 @@
 #include "parser.h"
-#include "listas.h"
-#include "funciones.h"
 #include "string_utils.h"
 #include "search.h"
 #include <stdio.h>
