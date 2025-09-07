@@ -113,8 +113,10 @@ void* tabla_hash_buscar(HashTable* tabla, const void* clave) {
 
     for (unsigned int i = 0; i < tabla->capacidad && !encontrado; i++) {
         unsigned int pos = (indice + i) % capacidad;
-        if (tabla->cmp_clave(tabla->buckets[pos]->clave, clave) == 0) {
-            encontrado = tabla->buckets[pos]->dato;
+        if (tabla->buckets[pos] != NULL) {
+            if (tabla->cmp_clave(tabla->buckets[pos]->clave, clave) == 0) {
+                encontrado = tabla->buckets[pos]->dato;
+            }
         }
     }
 
