@@ -164,5 +164,17 @@ int definir_lista(char* nombre, void* lista, Declaraciones declaraciones) {
 }
 
 
+unsigned long hash_lista(const Lista* lista) {
+    unsigned long h = 1469598103934665603ull; // offset basis
+    Nodo* actual = lista->glist->head;
+    while (actual) {
+        unsigned int* val = actual->dato;
+        h ^= *val;
+        h *= 1099511628211ull;
+        actual = actual->sig;
+    }
+    h ^= lista_longitud((Lista*)lista);
+    return h;
+}
 
 

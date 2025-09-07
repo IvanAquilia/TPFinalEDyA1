@@ -21,7 +21,6 @@ typedef struct {
 
     FuncionHash hash;
 
-    FuncionComparadora cmp;
     FuncionComparadora cmp_clave;
 
     FuncionDestructora destruir;

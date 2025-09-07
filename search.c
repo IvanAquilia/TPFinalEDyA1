@@ -14,7 +14,7 @@
 static Funcion* dfs_busqueda(Lista* estado_actual, Lista* objetivo,
                              Pila* pila, Declaraciones declaraciones,
                              FuncionesAll* funciones_todas, unsigned int cant_funciones_definidas,
-                             SearchExpr* pares);
+                             SearchExpr* pares, HashTable* estados_visitados);
 static int comprobar_composicion_candidata(Funcion* funcion, SearchExpr* pares, Declaraciones declaraciones);
 static int podar_casos_triviales(Funcion* funcion, Pila* pila, Lista* estado_actual);
 
@@ -95,7 +95,16 @@ Funcion* search(Declaraciones declaraciones, SearchExpr* pares) {
                                                 (FuncionVisitante)visitar_declaracion,
                                                 (FuncionCopia)copiar_declaracion,
                                                 "declaraciones");
-
+    HashTable* estados_visitados = tabla_hash_crear(
+        10007,                    // capacidad inicial (un primo grande)
+        (FuncionHash)hash_estado,              // función hash
+        (FuncionComparadora)cmp_estado,               // comparador
+        (FuncionDestructora)destruir_estado,          // destructor de dato
+        (FuncionDestructora)destruir_estado,          // destructor de clave (es la misma struct)
+        (FuncionCopia)copiar_estado,            // copia de dato
+        (FuncionCopia)copiar_estado,            // copia de clave
+        (FuncionVisitante)visitar_estado            // visitante (debug)
+    );
     char* nombre_lista_inicio = obtener_lista_iesima(pares, 0);
     char* nombre_lista_objetivo = obtener_lista_iesima(pares, 1);
     Lista* inicio = obtener_def_usuario(declaraciones, nombre_lista_inicio, LISTA);
@@ -107,15 +116,17 @@ Funcion* search(Declaraciones declaraciones, SearchExpr* pares) {
     Funcion* resultado = dfs_busqueda(inicio, objetivo,
                                      backtracking_funciones, declaraciones,
                                      funciones_todas, cant_funciones_definidas,
-                                     pares);
+                                     pares, estados_visitados);
 
     pila_destruir(backtracking_funciones);
     destruir_arreglo_aux_funciones(funciones_todas);
+    tabla_hash_destruir(estados_visitados);
     return resultado;
 }
 
 static Funcion* dfs_busqueda(Lista* estado_actual, Lista* objetivo, Pila* pila, Declaraciones declaraciones,
-                             FuncionesAll* funciones_todas, unsigned int cant_funciones_definidas, SearchExpr* pares) {
+                             FuncionesAll* funciones_todas, unsigned int cant_funciones_definidas, SearchExpr* pares,
+                             HashTable* estados_visitados) {
 
     /* Caso base, me pauso a chequear si es valida la solucion */
     if (listas_iguales(estado_actual, objetivo)) {
@@ -136,25 +147,30 @@ static Funcion* dfs_busqueda(Lista* estado_actual, Lista* objetivo, Pila* pila, 
     }
 
     Funcion* resultado = NULL;
+    EstadoLista estado = { estado_actual, pila_elementos(pila) };
     for (int i = 0; i < cant_funciones_definidas && resultado == NULL; i++) {
-        Declaracion* declaracion = funcion_definida_iesima(funciones_todas, i);
-        int factible_aplicar = podar_casos_triviales(declaracion->valor, pila, estado_actual);
+        if (tabla_hash_buscar(estados_visitados, &estado) == NULL) {
+            Declaracion* declaracion = funcion_definida_iesima(funciones_todas, i);
+            int factible_aplicar = podar_casos_triviales(declaracion->valor, pila, estado_actual);
 
-        if (factible_aplicar) {
-            ResultadoApply resultado_apply = aplicar_funcion(declaracion->valor, estado_actual, declaraciones);
-            Lista* estado_intermedio = resultado_apply.lista_resultado;
-            if (resultado_apply.status == 0) {
-                pila_push(pila, declaracion);
-                resultado = dfs_busqueda(estado_intermedio, objetivo, pila, declaraciones,
-                                          funciones_todas, cant_funciones_definidas, pares);
-                if (resultado == NULL)
-                    pila_pop(pila); // Elimino la funcion con la que probe todas las combinaciones
-                                    // hacia abajo en el arbol, tomo la siguiente y repito
+            if (factible_aplicar) {
+                ResultadoApply resultado_apply = aplicar_funcion(declaracion->valor, estado_actual, declaraciones);
+                Lista* estado_intermedio = resultado_apply.lista_resultado;
+
+                if (resultado_apply.status == 0) {
+                    pila_push(pila, declaracion);
+                    resultado = dfs_busqueda(estado_intermedio, objetivo, pila, declaraciones,
+                                              funciones_todas, cant_funciones_definidas, pares, estados_visitados);
+                    if (resultado == NULL)
+                        pila_pop(pila); // Elimino la funcion con la que probe todas las combinaciones
+                                        // hacia abajo en el arbol, tomo la siguiente y repito
+                }
+                destruir_lista(estado_intermedio); // Destruyo copia que genero apply haya o no haya encontrado la solucion
             }
-            destruir_lista(estado_intermedio); // Destruyo copia que genero apply haya o no haya encontrado la solucion
         }
     }
 
+    tabla_hash_insertar(estados_visitados, &estado, &estado);
     return resultado;
 }
 
@@ -244,4 +260,34 @@ static int podar_casos_triviales(Funcion* funcion, Pila* pila, Lista* estado_act
     }
 
     return factible_aplicar;
+}
+
+unsigned long hash_estado(const EstadoLista* estado) {
+    unsigned long h = hash_lista(estado->lista);
+    h ^= estado->profundidad + 0x9e3779b97f4a7c15ull + (h << 6) + (h >> 2);
+    return h;
+}
+
+int cmp_estado(const EstadoLista* a, const EstadoLista* b) {
+    if (listas_iguales(a->lista, b->lista) && a->profundidad == b->profundidad)
+        return 0;
+
+    return a->profundidad < b->profundidad ? -1 : 1;
+}
+
+EstadoLista* copiar_estado(const EstadoLista* estado) {
+    EstadoLista* nuevo = malloc(sizeof(EstadoLista));
+    nuevo->lista = copiar_lista(estado->lista);
+    nuevo->profundidad = estado->profundidad;
+    return nuevo;
+}
+
+void destruir_estado(EstadoLista* estado) {
+    destruir_lista(estado->lista);
+    free(estado);
+}
+
+void visitar_estado(const EstadoLista* estado) {
+    printf("Profundidad=%u, Lista=", estado->profundidad);
+    visitar_lista(estado->lista);
 }

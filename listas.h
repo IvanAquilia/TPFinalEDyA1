@@ -82,4 +82,8 @@ void visitar_lista(const Lista* lista);
 /*
  */
 int definir_lista(char* nombre, void* lista, Declaraciones declaraciones);
+
+/*
+ */
+unsigned long hash_lista(const Lista* lista);
 #endif

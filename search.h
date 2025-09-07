@@ -11,6 +11,11 @@ typedef struct {
     GArray* garray;
 } SearchExpr;
 
+typedef struct {
+    Lista* lista;
+    unsigned int profundidad;
+} EstadoLista;
+
 SearchExpr* strsearch_to_search(char* cursor, Declaraciones declaraciones);
 
 SearchExpr* searchexpr_crear();
@@ -38,4 +43,10 @@ Funcion* search(Declaraciones declaraciones, SearchExpr* search);
  * TENGO QUE VIOALR UN POCO LA INTERFAZ Y MOVEREM DE ABAJO HACIA ARRIBA CON HEAD Y TAIL PERO ES QUE LA PILA ES MUY UTIL PARA LO OTRO Y HCAER ESTO E MEJOR QUE TENER QUE DESPLAZARARRAYS INSERTANDO AL PRINCIPIO
  */
 Funcion* reconstruir_funcion_backtracking(Pila* pila);
+
+unsigned long hash_estado(const EstadoLista* estado);
+int cmp_estado(const EstadoLista* a, const EstadoLista* b);
+EstadoLista* copiar_estado(const EstadoLista* estado);
+void destruir_estado(EstadoLista* estado);
+void visitar_estado(const EstadoLista* estado);
 #endif
