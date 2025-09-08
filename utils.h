@@ -62,7 +62,7 @@ unsigned long hash_estado(const EstadoLista* estado);
 int cmp_estado(const EstadoLista* a, const EstadoLista* b);
 EstadoLista* copiar_estado(const EstadoLista* estado);
 void destruir_estado(EstadoLista* estado);
-void visitar_estado(const EstadoLista* estado);
+void visitar_estado(const unsigned int* dummy);
 
 
 

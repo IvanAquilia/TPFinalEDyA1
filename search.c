@@ -136,6 +136,8 @@ static Funcion* dfs_busqueda(Lista* estado_actual, Lista* objetivo, Pila* pila, 
     /* Caso base, me pauso a chequear si es valida la solucion */
     if (listas_iguales(estado_actual, objetivo)) {
         Funcion* compuesta_candidata = reconstruir_funcion_backtracking(pila);
+
+        /* Unico caso donde realizo una aplicacion potencialmente costosa */
         int valido = comprobar_composicion_candidata(compuesta_candidata, pares, declaraciones);
         if (valido)
             return compuesta_candidata;
@@ -167,7 +169,7 @@ static Funcion* dfs_busqueda(Lista* estado_actual, Lista* objetivo, Pila* pila, 
                     pila_pop(pila);
             }
 
-            // Destruyo copia que generó apply, haya o no haya encontrado la solucion
+            /* Destruyo copia que generó apply, haya o no haya encontrado la solucion */
             destruir_lista(estado_intermedio);
         }
     }
@@ -270,9 +272,9 @@ MemoEstados crear_tabla_estados() {
         300007,
         (FuncionHash)hash_estado,
         (FuncionComparadora)cmp_estado,
+        (FuncionDestructora)destruir_uint,
         (FuncionDestructora)destruir_estado,
-        (FuncionDestructora)destruir_estado,
-        (FuncionCopia)copiar_estado,
+        (FuncionCopia)copiar_uint,
         (FuncionCopia)copiar_estado,
         (FuncionVisitante)visitar_estado
     );
@@ -294,7 +296,8 @@ int estado_ya_visitado(MemoEstados estados, EstadoLista* estado) {
 
 void recordar_estado_visitado(MemoEstados estados, EstadoLista* estado_clave, EstadoLista* estado_valor) {
     // No me es relevante el saber si el estado estaba repetido o no.
-    int _repetido = tabla_hash_insertar(estados, estado_clave, estado_valor);
+    unsigned int _dummy = 1;
+    int _repetido = tabla_hash_insertar(estados, estado_clave, &_dummy);
     (int)_repetido;
 }
 

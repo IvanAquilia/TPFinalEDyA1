@@ -115,7 +115,7 @@ int lista_vacia(Lista* lista) {
     return 0;
 }
 
-unsigned int lista_longitud(Lista* lista) {
+unsigned int lista_longitud(const Lista* lista) {
     return lista->glist->longitud;
 }
 
@@ -148,7 +148,8 @@ void visitar_lista(const Lista* lista) {
 
 unsigned long hash_lista(const Lista* lista) {
     unsigned long h = 1469598103934665603ull;
-    Nodo* actual = lista->glist->head;
+    GList* glist_subyacente = lista->glist;
+    Nodo* actual = glist_subyacente->head;
     while (actual) {
         unsigned int* val = actual->dato;
         h ^= *val;

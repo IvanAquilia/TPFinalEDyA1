@@ -164,9 +164,8 @@ void destruir_estado(EstadoLista* estado) {
     free(estado);
 }
 
-void visitar_estado(const EstadoLista* estado) {
-    printf("Profundidad=%u, Lista=", estado->profundidad);
-    visitar_lista(estado->lista);
+void visitar_estado(const unsigned int* dummy) {
+    printf("Valor dummy de estado en tabla: %u\n", *dummy);
 }
 
 /* ------------- AUXILIARES/VARIAS ------------- */

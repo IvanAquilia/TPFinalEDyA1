@@ -67,7 +67,7 @@ int lista_vacia(Lista* lista);
 /*
  * Devuelve la cantidad de numeros naturales en la lista.
  */
-unsigned int lista_longitud(Lista* lista);
+unsigned int lista_longitud(const Lista* lista);
 
 /*
  * Devuelve un puntero al primer elemento de la lista, si es la lista vacia devuelve NULL.
