@@ -6,7 +6,20 @@
 #include <string.h>
 
 #define LARGO_SEARCH 200
-#define MAX_PROFUNDIDAD 9  // Hasta 10 tiempo razonable < 30seg
+
+/* 
+ * En el caso ideal de solo tener las 6 funciones bases definidas y ninguna mas, el tiempo de recorrido
+ * de MÁXIMO (es decir, el recorrido de todas las composiciones del arbol, excluyendo obviamente las podadas) con 
+ * profundidad 10 es menor a 4-5 segundos, con profundidad 11 puede explotar hasta los 30seg.
+ * Por otro lado en entornos controlados con las 6 funciones base + 3 definidas custom por el usuario
+ * (con repeticiones, algo costosas) se verificó que hasta con un valor de profundidad de 10 se posee
+ * un tiempo de recorrido MÁXIMO razonable menor a 25-30seg, a partir de 11 explota en crecimiento y puede
+ * superar facilmente el minuto/minuto y medio de tiempo de recorrido máximo. De todos modos en la práctica
+ * es extraño que se tenga que recorrer casi todo el arbol para encontrar una solucion, por lo que el tiempo
+ * promedio es menor, esto son los casos extremos. Si se busca practicamente que sea instantáneo (dependiendo
+ * de la cantidad de funciones definidas) se recomienda un valor entre 8 y 9.
+ */
+#define MAX_PROFUNDIDAD 10  
 
 /*
  * Realiza la busqueda utilizando un algoritmo DFS-like, junto con una tabla memo en la que se guardan estados de lista,

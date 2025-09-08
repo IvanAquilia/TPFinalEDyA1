@@ -108,19 +108,24 @@ void* tabla_hash_buscar(HashTable* tabla, const void* clave) {
     unsigned long h = tabla->hash(clave);
     unsigned long indice = h % capacidad;
     void* encontrado = NULL;
+    int presente = 1;
 
     // Debido a que no se pueden eliminar elementos, si no se encuentra en el
     // primer slot del linear probing, no lo estará en los siguientes.
     if (tabla->buckets[indice] == NULL)
         return NULL;
 
-    for (unsigned int i = 0; i < tabla->capacidad && !encontrado; i++) {
+    for (unsigned int i = 0; presente && !encontrado && i < tabla->capacidad; i++) {
         unsigned int pos = (indice + i) % capacidad;
         if (tabla->buckets[pos] != NULL) {
             if (tabla->cmp_clave(tabla->buckets[pos]->clave, clave) == 0) {
                 encontrado = tabla->buckets[pos]->dato;
             }
-        }
+        } else {
+            /* Si encuentro un slot vacio, puedo asegurar que no esta, ya que la funcion insertar
+	     * lo hace en el primer slot vacio que encuentra siempre mas cercano a la posicion original */
+	    presente = 0;
+	}
     }
 
     return encontrado;
