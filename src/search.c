@@ -150,7 +150,7 @@ static Funcion* dfs_busqueda(Lista* estado_actual, Lista* objetivo, Pila* pila, 
         return NULL;
 
     Funcion* resultado = NULL;
-    for (int i = 0; i < cant_funciones_definidas && resultado == NULL; i++) {
+    for (unsigned int i = 0; i < cant_funciones_definidas && resultado == NULL; i++) {
         Declaracion* declaracion = funcion_definida_iesima(funciones_todas, i);
         int factible_aplicar = podar_casos_triviales(declaracion->valor, pila, estado_actual);
 
@@ -177,7 +177,7 @@ static Funcion* dfs_busqueda(Lista* estado_actual, Lista* objetivo, Pila* pila, 
     /* Una vez que ya probé con todas las combinaciones de composiciones a partir de
      * este [estado lista actual + pronfundiad], lo recuerdo para no
      * volver a intentarlas sin sentido si llego a volver a llegar a este estado */
-    recordar_estado_visitado(estados_visitados, &estado, &estado);
+    recordar_estado_visitado(estados_visitados, &estado);
     return resultado;
 }
 
@@ -213,7 +213,7 @@ Funcion* reconstruir_funcion_backtracking(Pila* pila) {
         unsigned int largo = pila_elementos(_pila);
         char* funciones_buen_orden[largo];
 
-        for (int i = 0; !pila_vacia(_pila) && i < largo; i++) {
+        for (unsigned int i = 0; !pila_vacia(_pila) && i < largo; i++) {
             Declaracion* d = pila_top(_pila);
             funciones_buen_orden[i] = str_dup(d->nombre);  // Guardo la funcion "compactada" en el caso que sea
                                                            // una custom, no expando su definicion en sus funciones base.
@@ -224,7 +224,7 @@ Funcion* reconstruir_funcion_backtracking(Pila* pila) {
         for (int i = (int)largo - 1; i >= 0 ; i--)
             componer_funcion(funcion, funciones_buen_orden[i]);
 
-        for (int i = 0; i < largo; i++)
+        for (unsigned int i = 0; i < largo; i++)
             free(funciones_buen_orden[i]);
 
         pila_destruir(_pila);
@@ -294,10 +294,10 @@ int estado_ya_visitado(MemoEstados estados, EstadoLista* estado) {
     return 1;
 }
 
-void recordar_estado_visitado(MemoEstados estados, EstadoLista* estado_clave, EstadoLista* estado_valor) {
+void recordar_estado_visitado(MemoEstados estados, EstadoLista* estado_clave) {
     // No me es relevante el saber si el estado estaba repetido o no.
     unsigned int _dummy = 1;
     int _repetido = tabla_hash_insertar(estados, estado_clave, &_dummy);
-    (int)_repetido;
+    (void)_repetido;
 }
 

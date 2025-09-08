@@ -80,6 +80,6 @@ int estado_ya_visitado(MemoEstados estados, EstadoLista* estado);
 /*
  * Almacena el estado en la tabla de estados.
  */
-void recordar_estado_visitado(MemoEstados estados, EstadoLista* estado_clave, EstadoLista* estado_valor);
+void recordar_estado_visitado(MemoEstados estados, EstadoLista* estado_clave);
 
 #endif

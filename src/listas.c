@@ -96,12 +96,12 @@ void lista_aumentar_izquierda(Lista* lista) {
 
 void lista_eliminar_derecha(Lista* lista) {
     int _aux = glist_eliminar_final(lista->glist);
-    (int)_aux;
+    (void)_aux;
 }
 
 void lista_eliminar_izquierda(Lista* lista) {
     int _aux = glist_eliminar_inicio(lista->glist);
-    (int)_aux;
+    (void)_aux;
 }
 
 void destruir_lista(Lista* lista) {

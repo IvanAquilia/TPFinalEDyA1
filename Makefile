@@ -1,33 +1,24 @@
-FLAGS = -Wall -Wextra -Werror -O2 -std=c99 -lm
+CFLAGS = -Wall -Wextra -Werror -O2 -std=c99 -lm
 CC = gcc
 
-programa: main.o parser.o listas.o funciones.o search.o utils.o string_utils.o glist.o listas.o hash.o garray.o pila.o
-	$(CC) -o $@ $^ $(FLAGS)
+SRC_DIR = src
+OBJ_DIR = obj
 
-main.o: glist.h parser.h listas.h
+SRCS = $(wildcard $(SRC_DIR)/*.c)
+OBJS = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRCS))
 
-parser.o: parser.h
+TARGET = interprete_funciones_lista
 
-listas.o: listas.h
+$(TARGET): $(OBJS)
+	$(CC) -o $@ $^ $(CFLAGS)
 
-funciones.o: funciones.h
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
 
-search.o: search.h
-
-pila.o: pila.h
-
-utils.o: utils.h
-
-string_utils.o: string_utils.h
-
-glist.o:  glist.h
-
-hash.o: hash.h
-
-garray.o: garray.h
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
 
 clean:
-	rm *.o
-	rm programa
+	rm -rf $(OBJ_DIR) $(TARGET)
 
-.PHONY = clean
+.PHONY: clean

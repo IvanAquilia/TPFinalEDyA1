@@ -13,13 +13,14 @@ int main(void) {
         return 1;
     }
 
-    printf("\n------------INTERPRETE DE LISTAS EDyA1------------\n");
+    printf("\n------------INTERPRETE DE FUNCIONES DE LISTAS EDyA1------------\n");
     char buffer[2000];
     int en_funcionamiento = 1, guardada;
 
     while (en_funcionamiento) {
         printf(">>> ");
-        fgets(buffer, sizeof(buffer), stdin);
+        char* _t = fgets(buffer, sizeof(buffer), stdin);
+        (void)_t; // Ignoro el retorno
         ResultadoParser r = parser_analizar(buffer, declaraciones);
 
         switch (r.tipo) {
@@ -92,7 +93,8 @@ int main(void) {
                 }
                 else
                     printf("Se recorrieron todas las funciones y no se encontro una que cumpla con el "
-                           "objetivo en el tiempo y profundidad limite. \n");
+                           "objetivo en el tiempo y profundidad limite. Puede intentar aumentando la profundidad "
+                           "limite del search.\n");
 
                 break;
             case OP_INVALIDA:

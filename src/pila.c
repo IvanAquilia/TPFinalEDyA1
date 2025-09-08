@@ -45,7 +45,7 @@ void pila_push(Pila* pila, void* dato) {
 
 void pila_pop(Pila* pila) {
     int _aux = glist_eliminar_inicio(pila->glist);
-    (int)_aux;
+    (void)_aux;
 }
 
 void* pila_top(Pila* pila) {

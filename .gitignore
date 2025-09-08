@@ -6,24 +6,6 @@ CMakeLists.txt
 *.o
 *.exe
 *.out
-programa
+interprete_funciones_lista
 
 
-deff Md = Od <Sd> Di;
-deff Mi = Oi <Si> Dd;
-deff DDi = Od <Sd> Mi;
-
-defl L1 = [1, 0, 3];
-defl L2 = [1, 2];
-defl L3 = [2, 0, 4];
-defl L4 = [2, 2];
-
->>> defl L1 = [1, 0, 3];
->>> defl L2 = [1,2];
->>> defl L3 = [2,0,2];
->>> defl L4 = [2,1];
-
-defl L1 = [0,1,2];
-defl L2 = [1,2,3];
-defl L3 = [0,0,0];
-defl L4 = [1,1,1];

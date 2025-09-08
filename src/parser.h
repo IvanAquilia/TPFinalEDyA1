@@ -51,12 +51,12 @@ int verificar_lista(char* lista_str);
 /*
  * Devuelve 1 si la string coincide con un formato de lista valida, sino 0.
  */
-static int verificar_funcion(char* funcion_str);
+int verificar_funcion(char* funcion_str);
 
 /*
  * Devuelve 1 si la string coincide con un formato de expresion de search valida, sino 0.
  */
-static int verificar_search(char* cursor);
+int verificar_search(char* cursor);
 
 /*
  * Libera los datos que temporalmente se guardaron en los campos de la respuesta antes de guardarse en la tabla hash.
