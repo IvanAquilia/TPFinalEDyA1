@@ -146,7 +146,7 @@ unsigned long hash_estado(const EstadoLista* estado) {
 }
 
 int cmp_estado(const EstadoLista* a, const EstadoLista* b) {
-    if (a->profundidad == b->profundidad && listas_iguales(a->lista, b->lista))
+    if (a->profundidad >= b->profundidad && listas_iguales(a->lista, b->lista))
         return 0;
 
     return -1;
